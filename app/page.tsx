@@ -10,17 +10,15 @@ import {
   Sparkles,
   WalletMinimal,
 } from "lucide-react";
-import { type Project } from "@/components/ProjectCard";
+import { type Project, type ProjectStatus } from "@/components/ProjectCard";
 import ProjectCarousel from "@/components/ProjectCarousel";
 import { supabase } from "@/lib/supabase";
 import { WaitlistForm } from "@/components/WaitlistForm";
 
-type PipelineStatus = "Live" | "Beta" | "Soon";
-
-const PIPELINE_STATUS_STYLES: Record<PipelineStatus, string> = {
+const PIPELINE_STATUS_STYLES: Record<ProjectStatus, string> = {
   Live: "text-emerald-300",
   Beta: "text-amber-200",
-  Soon: "text-zinc-400",
+  "Coming Soon": "text-zinc-400",
 };
 
 const STATUS_LEGEND = [
@@ -37,6 +35,8 @@ const ICON_MAP: Record<string, JSX.Element> = {
   Database: <Database className="h-5 w-5 text-indigo-300" />,
   Cpu: <Cpu className="h-5 w-5 text-indigo-300" />,
 };
+
+const numberFormatter = new Intl.NumberFormat("en-US");
 
 async function getProjects(): Promise<Project[]> {
   try {
@@ -84,63 +84,35 @@ function getFocusAreas(projects: Project[]): string[] {
 // 페이지 데이터를 주기적으로 갱신 (60초마다)
 export const revalidate = 60;
 
-async function getHeroStats(): Promise<Array<{ label: string; value: string }>> {
-  try {
-    const { data, error } = await supabase
-      .from("hero_stats")
-      .select("label, value")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+function buildHeroStats(projects: Project[]): Array<{ label: string; value: string }> {
+  const total = projects.length;
+  const live = projects.filter((project) => project.status === "Live").length;
+  const pipeline = projects.filter((project) => project.status !== "Live").length;
 
-    if (error) {
-      console.error("Failed to fetch hero stats:", error);
-      return [
-        { label: "Independent Projects", value: "12" },
-        { label: "Monthly Visitors", value: "48K" },
-        { label: "Community Members", value: "2.4K" },
-      ];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Failed to fetch hero stats:", error);
-    return [
-      { label: "Independent Projects", value: "12" },
-      { label: "Monthly Visitors", value: "48K" },
-      { label: "Community Members", value: "2.4K" },
-    ];
-  }
+  return [
+    { label: "Projects Published", value: numberFormatter.format(total) },
+    { label: "Live Launches", value: numberFormatter.format(live) },
+    { label: "In Pipeline", value: numberFormatter.format(pipeline) },
+  ];
 }
 
-async function getPipeline(): Promise<Array<{ label: string; status: PipelineStatus }>> {
-  try {
-    const { data, error } = await supabase
-      .from("pipeline")
-      .select("label, status")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+type PipelineItem = { label: string; status: ProjectStatus; category?: string };
 
-    if (error) {
-      console.error("Failed to fetch pipeline:", error);
-      return [
-        { label: "Atlas UI kit refresh", status: "Live" },
-        { label: "Docs search microsite", status: "Beta" },
-        { label: "Community templates vault", status: "Soon" },
-      ];
-    }
+const STATUS_PRIORITY: Record<ProjectStatus, number> = {
+  Live: 0,
+  Beta: 1,
+  "Coming Soon": 2,
+};
 
-    return (data || []).map((item) => ({
-      label: item.label,
-      status: item.status as PipelineStatus,
+function buildPipeline(projects: Project[]): PipelineItem[] {
+  return projects
+    .slice()
+    .sort((a, b) => STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status])
+    .map((project) => ({
+      label: project.name,
+      status: project.status,
+      category: project.category,
     }));
-  } catch (error) {
-    console.error("Failed to fetch pipeline:", error);
-    return [
-      { label: "Atlas UI kit refresh", status: "Live" },
-      { label: "Docs search microsite", status: "Beta" },
-      { label: "Community templates vault", status: "Soon" },
-    ];
-  }
 }
 
 async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
@@ -175,8 +147,8 @@ export default async function HomePage() {
   const year = new Date().getFullYear();
   const projects = await getProjects();
   const focusAreas = getFocusAreas(projects);
-  const heroStats = await getHeroStats();
-  const pipeline = await getPipeline();
+  const heroStats = buildHeroStats(projects);
+  const pipeline = buildPipeline(projects);
   const buildLog = await getBuildLog();
 
   return (
@@ -256,9 +228,16 @@ export default async function HomePage() {
                 <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
                   <p className="text-xs uppercase tracking-[0.45em] text-zinc-500">Currently incubating</p>
                   <ul className="mt-4 space-y-4 text-sm text-zinc-300">
-                    {pipeline.map((item) => (
+                    {pipeline.slice(0, 6).map((item) => (
                       <li key={item.label} className="flex items-center justify-between gap-4">
-                        <span className="flex-1 break-words min-w-0">{item.label}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="block break-words">{item.label}</span>
+                          {item.category && (
+                            <span className="mt-1 block text-xs uppercase tracking-[0.25em] text-zinc-500">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
                         <span className={`text-xs font-semibold shrink-0 ${PIPELINE_STATUS_STYLES[item.status]}`}>
                           {item.status}
                         </span>
