@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AdSenseScript } from "@/components/AdSense";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -70,7 +71,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AdSenseScript />
         <GoogleAnalytics />
       </head>
-      <body className={`${inter.variable} bg-zinc-950`}>{children}</body>
+      <body className={`${inter.variable} bg-zinc-950`}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
