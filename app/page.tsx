@@ -37,6 +37,7 @@ const ICON_MAP: Record<string, JSX.Element> = {
 };
 
 const numberFormatter = new Intl.NumberFormat("en-US");
+const timelineFormatter = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
 
 type HeroStat = {
   label: string;
@@ -65,6 +66,7 @@ async function getProjects(): Promise<Project[]> {
       icon: ICON_MAP[project.icon_name] || ICON_MAP.Radar,
       layout: project.layout,
       category: project.category,
+      created_at: project.created_at,
     }));
   } catch (error) {
     console.error("Failed to fetch projects:", error);
@@ -136,33 +138,28 @@ function buildPipeline(projects: Project[]): PipelineItem[] {
       category: project.category,
     }));
 }
+type BuildLogItem = {
+  title: string;
+  status: ProjectStatus;
+  dateLabel: string;
+  category?: string;
+};
 
-async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
-  try {
-    const { data, error } = await supabase
-      .from("build_log")
-      .select("title, date")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
-
-    if (error) {
-      console.error("Failed to fetch build log:", error);
-      return [
-        { title: "Launchpad v2 docs shipped", date: "Jan 2026 / Release" },
-        { title: "Atlas kit tokens refreshed", date: "Dec 2025 / Update" },
-        { title: "Community vault research sprint", date: "Nov 2025 / Research" },
-      ];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Failed to fetch build log:", error);
-    return [
-      { title: "Launchpad v2 docs shipped", date: "Jan 2026 / Release" },
-      { title: "Atlas kit tokens refreshed", date: "Dec 2025 / Update" },
-      { title: "Community vault research sprint", date: "Nov 2025 / Research" },
-    ];
-  }
+function buildBuildLog(projects: Project[]): BuildLogItem[] {
+  return projects
+    .slice()
+    .sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5)
+    .map((project) => ({
+      title: project.name,
+      status: project.status,
+      category: project.category,
+      dateLabel: project.created_at ? timelineFormatter.format(new Date(project.created_at)) : "Status updated",
+    }));
 }
 
 export default async function HomePage() {
@@ -171,7 +168,8 @@ export default async function HomePage() {
   const focusAreas = getFocusAreas(projects);
   const heroStats = buildHeroStats(projects);
   const pipeline = buildPipeline(projects);
-  const buildLog = await getBuildLog();
+  const buildLog = buildBuildLog(projects);
+  const broadcastProjects = projects.map((project) => ({ name: project.name, status: project.status }));
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
@@ -321,7 +319,7 @@ export default async function HomePage() {
             <p className="text-base leading-relaxed text-zinc-400 break-words">
               Receive drop notes across every Thive Lab property—release recaps, API updates, community calls, and opportunities to test upcoming sites.
             </p>
-            <WaitlistForm />
+            <WaitlistForm projects={broadcastProjects} />
             <div className="flex items-center gap-4 text-xs text-zinc-500">
               <span className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -335,19 +333,29 @@ export default async function HomePage() {
           </div>
 
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-6">
-            <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">Build log</p>
-            <ul className="mt-5 space-y-4 text-sm text-zinc-300">
-              {buildLog.map((note) => (
-                <li
-                  key={note.title}
-                  className="flex items-start justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0"
-                >
-                  <span className="flex-1 leading-relaxed break-words min-w-0">{note.title}</span>
-                  <span className="text-xs text-zinc-500 shrink-0 whitespace-nowrap">{note.date}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-6 text-xs text-zinc-500">Follow along via GitHub or the broadcast list to join the next release window.</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">Build log</p>
+              <ul className="mt-5 space-y-4 text-sm text-zinc-300">
+                {buildLog.map((entry) => (
+                  <li
+                    key={`${entry.title}-${entry.dateLabel}`}
+                    className="flex items-start justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="leading-relaxed break-words text-white">{entry.title}</p>
+                      {entry.category && (
+                        <p className="mt-1 text-xs uppercase tracking-[0.3em] text-zinc-500">{entry.category}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-2 text-right">
+                      <span className={`text-xs font-semibold ${PIPELINE_STATUS_STYLES[entry.status]}`}>
+                        {entry.status}
+                      </span>
+                      <span className="text-xs text-zinc-500">{entry.dateLabel}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-xs text-zinc-500">Subscribe above to get emailed the moment these entries flip to Live.</p>
           </div>
         </section>
       </div>
