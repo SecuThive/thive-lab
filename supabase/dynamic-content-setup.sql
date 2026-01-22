@@ -3,7 +3,7 @@
 -- hero_stats 테이블 - 홈페이지 통계
 CREATE TABLE IF NOT EXISTS hero_stats (
   id BIGSERIAL PRIMARY KEY,
-  label TEXT NOT NULL,
+  label TEXT NOT NULL UNIQUE,
   value TEXT NOT NULL,
   display_order INTEGER NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS hero_stats (
 -- pipeline 테이블 - 현재 진행중인 프로젝트
 CREATE TABLE IF NOT EXISTS pipeline (
   id BIGSERIAL PRIMARY KEY,
-  label TEXT NOT NULL,
+  label TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL CHECK (status IN ('Live', 'Beta', 'Soon')),
   display_order INTEGER NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS pipeline (
 -- build_log 테이블 - 최근 업데이트 로그
 CREATE TABLE IF NOT EXISTS build_log (
   id BIGSERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
+  title TEXT NOT NULL UNIQUE,
   date TEXT NOT NULL,
   display_order INTEGER NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -57,19 +57,19 @@ INSERT INTO hero_stats (label, value, display_order) VALUES
 ('Automations Deployed', '38+', 1),
 ('Average Launch Time', '9 days', 2),
 ('Teams Supported', '24', 3)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (label) DO NOTHING;
 
 INSERT INTO pipeline (label, status, display_order) VALUES
 ('Steam Scout API', 'Live', 1),
 ('Junior Jobs EU', 'Beta', 2),
 ('Subsidy AI alerts', 'Soon', 3)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (label) DO NOTHING;
 
 INSERT INTO build_log (title, date, display_order) VALUES
 ('Steam Scout shipped alert webhooks', 'Jan 2026 / Release', 1),
 ('Junior Jobs talent graph refresh', 'Dec 2025 / Update', 2),
 ('Subsidy AI grants ingestion', 'Nov 2025 / Research', 3)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (title) DO NOTHING;
 
 -- RLS 활성화
 ALTER TABLE hero_stats ENABLE ROW LEVEL SECURITY;
