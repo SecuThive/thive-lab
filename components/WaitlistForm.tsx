@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
@@ -25,53 +26,65 @@ export function WaitlistForm() {
 
       if (data.success) {
         setStatus("success");
-        setMessage(data.message || "Successfully joined the waitlist!");
+        setMessage(data.message || "Welcome aboard! Check your inbox for confirmation.");
         setEmail("");
       } else {
         setStatus("error");
-        setMessage(data.message || "Failed to join waitlist. Please try again.");
+        setMessage(data.message || "Something went wrong. Please try again.");
       }
     } catch (error) {
       setStatus("error");
-      setMessage("An error occurred. Please try again.");
+      setMessage("Network error. Please check your connection.");
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
-        <input
-          type="email"
-          name="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@company.com"
-          disabled={status === "loading"}
-          className="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none min-w-0 disabled:opacity-50"
-        />
+        <div className="relative flex-1">
+          <input
+            type="email"
+            name="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email address"
+            disabled={status === "loading" || status === "success"}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          />
+        </div>
         <button
           type="submit"
-          disabled={status === "loading"}
-          className="rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={status === "loading" || status === "success"}
+          className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:shadow-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
         >
-          {status === "loading" ? "Joining..." : "Join Waitlist"}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
+            {status === "loading" ? "Joining..." : status === "success" ? "Joined!" : "Join Waitlist"}
+          </span>
+          {status !== "loading" && status !== "success" && (
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 opacity-0 transition group-hover:opacity-100" />
+          )}
         </button>
       </form>
 
       {status === "success" && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-          {message}
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-emerald-300">{message}</p>
+          </div>
         </div>
       )}
 
       {status === "error" && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-          {message}
+        <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-400 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-300">{message}</p>
+          </div>
         </div>
       )}
-
-      <p className="text-xs text-zinc-500">No spam. Unsubscribe anytime.</p>
     </div>
   );
 }

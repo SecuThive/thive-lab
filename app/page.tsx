@@ -297,16 +297,25 @@ export default async function HomePage() {
 
         <section className="grid gap-10 rounded-3xl border border-zinc-800 bg-zinc-950/70 p-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/40 px-4 py-1 text-xs uppercase tracking-[0.35em] text-zinc-400">
+            <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/40 px-4 py-1.5 text-xs uppercase tracking-[0.35em] text-zinc-400">
               <Mail className="h-4 w-4 text-indigo-300" />
-              <span>Waitlist</span>
+              <span>Join Waitlist</span>
             </div>
-            <h3 className="text-3xl font-semibold text-white break-words">Get notified when we launch new tools.</h3>
-            <p className="text-base text-zinc-400 break-words">
-              Monthly changelog covering new utilities, research drops, and open pilot slots. No noise, just shipping notes.
+            <h3 className="text-3xl font-semibold text-white break-words">Stay in the loop.</h3>
+            <p className="text-base leading-relaxed text-zinc-400 break-words">
+              Get early access to new tools, beta invites, and monthly updates on what we're building. No spam—just product news and pilot opportunities.
             </p>
             <WaitlistForm />
-            <p className="text-xs text-zinc-500">No spam. Unsubscribe anytime.</p>
+            <div className="flex items-center gap-4 text-xs text-zinc-500">
+              <span className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                No spam, ever
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                Unsubscribe anytime
+              </span>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-6">
