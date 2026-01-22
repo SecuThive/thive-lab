@@ -36,12 +36,12 @@ const combineClasses = (...classes: Array<string | undefined>) =>
 const CardBody = ({ project }: { project: Project }) => (
   <div className="flex h-full flex-col">
     <div className="flex items-start justify-between gap-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-500/30">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-500/30 shrink-0">
         {project.icon}
       </div>
       <span
         className={combineClasses(
-          "rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wide",
+          "rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wide whitespace-nowrap shrink-0",
           STATUS_STYLES[project.status]
         )}
       >
@@ -50,14 +50,14 @@ const CardBody = ({ project }: { project: Project }) => (
     </div>
 
     <div className="mt-8 space-y-3">
-      <p className="text-xl font-semibold tracking-tight text-white">{project.name}</p>
-      <p className="text-sm leading-relaxed text-zinc-400">{project.description}</p>
+      <p className="text-xl font-semibold tracking-tight text-white break-words">{project.name}</p>
+      <p className="text-sm leading-relaxed text-zinc-400 break-words">{project.description}</p>
     </div>
 
-    <div className="mt-auto pt-10 text-xs uppercase tracking-[0.25em] text-zinc-500">
-      <div className="flex items-center justify-between">
-        <span>{STATUS_COPY[project.status]}</span>
-        <span className="flex items-center gap-2 text-sm font-medium tracking-normal text-indigo-300">
+    <div className="mt-auto pt-8 text-[11px] uppercase tracking-[0.2em] text-zinc-500">
+      <div className="flex items-center justify-between gap-3 min-w-0">
+        <span className="leading-tight break-words flex-1">{STATUS_COPY[project.status]}</span>
+        <span className="flex items-center gap-2 text-sm font-medium tracking-normal text-indigo-300 shrink-0 whitespace-nowrap">
           {project.link === "#" ? "Stay tuned" : "View project"}
           <ArrowUpRight className="h-4 w-4" />
         </span>

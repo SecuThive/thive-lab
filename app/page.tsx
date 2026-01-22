@@ -125,10 +125,10 @@ export default function HomePage() {
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-8">
               <div className="space-y-6">
-                <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[58px]">
+                <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[58px] break-words">
                   Building tools for the modern web.
                 </h1>
-                <p className="max-w-2xl text-lg text-zinc-400 lg:text-xl">
+                <p className="max-w-2xl text-lg text-zinc-400 lg:text-xl break-words">
                   Automated utilities and data services designed to erase busywork. We operate like an internal tooling team for founders that care about speed, clarity, and measurable outcomes.
                 </p>
               </div>
@@ -157,8 +157,8 @@ export default function HomePage() {
                     key={stat.label}
                     className="rounded-2xl border border-zinc-800/80 bg-zinc-950/70 px-5 py-4"
                   >
-                    <dt className="text-xs uppercase tracking-[0.4em] text-zinc-500">{stat.label}</dt>
-                    <dd className="mt-3 text-2xl font-semibold text-white">{stat.value}</dd>
+                    <dt className="text-xs uppercase tracking-[0.4em] text-zinc-500 break-words">{stat.label}</dt>
+                    <dd className="mt-3 text-2xl font-semibold text-white break-words">{stat.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -172,7 +172,7 @@ export default function HomePage() {
                     {FOCUS_AREAS.map((area) => (
                       <span
                         key={area}
-                        className="rounded-full border border-zinc-800/70 bg-zinc-950/60 px-3 py-1 text-xs text-zinc-300"
+                        className="rounded-full border border-zinc-800/70 bg-zinc-950/60 px-3 py-1 text-xs text-zinc-300 break-words"
                       >
                         {area}
                       </span>
@@ -185,8 +185,8 @@ export default function HomePage() {
                   <ul className="mt-4 space-y-4 text-sm text-zinc-300">
                     {PIPELINE.map((item) => (
                       <li key={item.label} className="flex items-center justify-between gap-4">
-                        <span>{item.label}</span>
-                        <span className={`text-xs font-semibold ${PIPELINE_STATUS_STYLES[item.status]}`}>
+                        <span className="flex-1 break-words min-w-0">{item.label}</span>
+                        <span className={`text-xs font-semibold shrink-0 ${PIPELINE_STATUS_STYLES[item.status]}`}>
                           {item.status}
                         </span>
                       </li>
@@ -207,8 +207,8 @@ export default function HomePage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
               <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Product stack</p>
-              <h2 className="text-3xl font-semibold text-white">A bento grid of active labs</h2>
-              <p className="max-w-2xl text-base text-zinc-400">
+              <h2 className="text-3xl font-semibold text-white break-words">A bento grid of active labs</h2>
+              <p className="max-w-2xl text-base text-zinc-400 break-words">
                 Each tile links to a focused utility—shipping pricing tools, hiring intelligence, finance automation, and data services that layer on your existing workflow.
               </p>
             </div>
@@ -222,7 +222,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:auto-rows-[250px] sm:grid-cols-6 sm:grid-flow-dense">
+          <div className="grid grid-cols-1 gap-5 sm:auto-rows-[270px] sm:grid-cols-6 sm:grid-flow-dense">
             {PROJECTS.map((project) => (
               <ProjectCard
                 key={project.name}
@@ -239,8 +239,8 @@ export default function HomePage() {
               <Mail className="h-4 w-4 text-indigo-300" />
               <span>Waitlist</span>
             </div>
-            <h3 className="text-3xl font-semibold text-white">Get notified when we launch new tools.</h3>
-            <p className="text-base text-zinc-400">
+            <h3 className="text-3xl font-semibold text-white break-words">Get notified when we launch new tools.</h3>
+            <p className="text-base text-zinc-400 break-words">
               Monthly changelog covering new utilities, research drops, and open pilot slots. No noise, just shipping notes.
             </p>
             <form className="flex flex-col gap-3 sm:flex-row" action="#" method="post">
@@ -249,11 +249,11 @@ export default function HomePage() {
                 name="email"
                 required
                 placeholder="you@company.com"
-                className="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none"
+                className="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none min-w-0"
               />
               <button
                 type="submit"
-                className="rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+                className="rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 whitespace-nowrap"
               >
                 Join Waitlist
               </button>
@@ -269,8 +269,8 @@ export default function HomePage() {
                   key={note.title}
                   className="flex items-start justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0"
                 >
-                  <span className="max-w-[70%] leading-relaxed">{note.title}</span>
-                  <span className="text-xs text-zinc-500">{note.date}</span>
+                  <span className="flex-1 leading-relaxed break-words min-w-0">{note.title}</span>
+                  <span className="text-xs text-zinc-500 shrink-0 whitespace-nowrap">{note.date}</span>
                 </li>
               ))}
             </ul>
@@ -283,6 +283,9 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <p>© {year} Thive Lab. Crafted in Seoul.</p>
           <div className="flex flex-wrap items-center gap-6 text-zinc-400">
+            <Link href="/admin" className="hover:text-indigo-300">
+              Admin
+            </Link>
             <Link href="https://github.com/thivelab" target="_blank" rel="noreferrer" className="hover:text-indigo-300">
               GitHub
             </Link>
