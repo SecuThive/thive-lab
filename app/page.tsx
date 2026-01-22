@@ -10,7 +10,8 @@ import {
   Sparkles,
   WalletMinimal,
 } from "lucide-react";
-import ProjectCard, { type Project } from "@/components/ProjectCard";
+import { type Project } from "@/components/ProjectCard";
+import ProjectCarousel from "@/components/ProjectCarousel";
 import { supabase } from "@/lib/supabase";
 import { WaitlistForm } from "@/components/WaitlistForm";
 
@@ -230,15 +231,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:auto-rows-[270px] sm:grid-cols-6 sm:grid-flow-dense">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.name}
-                project={project}
-                className={project.layout ?? "sm:col-span-3"}
-              />
-            ))}
-          </div>
+          <ProjectCarousel projects={projects} />
         </section>
 
         <section className="grid gap-10 rounded-3xl border border-zinc-800 bg-zinc-950/70 p-8 lg:grid-cols-[1.05fr_0.95fr]">
