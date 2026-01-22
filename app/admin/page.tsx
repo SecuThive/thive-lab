@@ -173,23 +173,13 @@ export default function AdminPage() {
 
     if (editingIndex !== null) {
       const updated = [...projects];
-      updatdiv className="flex items-center gap-3">
-            <button
-              onClick={() => handleOpenForm()}
-              className="flex items-center gap-2 rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
-            >
-              <Plus className="h-4 w-4" />
-              새 프로젝트
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 rounded-2xl border border-zinc-800 px-6 py-3 text-sm font-semibold text-zinc-300 transition hover:border-red-500/50 hover:text-red-400"
-              title="로그아웃"
-            >
-              <LogOut className="h-4 w-4" />
-              로그아웃
-            </button>
-          </divm();
+      updated[editingIndex] = newProject;
+      setProjects(updated);
+    } else {
+      setProjects([...projects, newProject]);
+    }
+
+    handleCloseForm();
   };
 
   const handleDelete = (index: number) => {
@@ -214,13 +204,23 @@ export default function AdminPage() {
             <h1 className="text-4xl font-semibold text-white">프로젝트 관리</h1>
             <p className="text-zinc-400">프로젝트를 추가, 수정, 삭제할 수 있습니다.</p>
           </div>
-          <button
-            onClick={() => handleOpenForm()}
-            className="flex items-center gap-2 rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
-          >
-            <Plus className="h-4 w-4" />
-            새 프로젝트
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleOpenForm()}
+              className="flex items-center gap-2 rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+            >
+              <Plus className="h-4 w-4" />
+              새 프로젝트
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-2xl border border-zinc-800 px-6 py-3 text-sm font-semibold text-zinc-300 transition hover:border-red-500/50 hover:text-red-400"
+              title="로그아웃"
+            >
+              <LogOut className="h-4 w-4" />
+              로그아웃
+            </button>
+          </div>
         </div>
 
         {/* Projects Table */}
