@@ -30,19 +30,18 @@ export function WaitlistForm({ projects }: WaitlistFormProps) {
 
   const projectOptions = useMemo<ProjectOption[]>(() => {
     const seen = new Set<string>();
-    const scoped = projects
-      .filter((project) => project.name)
-      .map((project) => {
-        if (seen.has(project.name)) return null;
-        seen.add(project.name);
-        return {
-          value: project.name,
-          label: `${project.name} · ${project.status}`,
-          status: project.status,
-        } satisfies ProjectOption;
-      })
-      .filter((option): option is ProjectOption => option !== null);
-
+    const scoped: ProjectOption[] = [];
+    projects.forEach((project) => {
+      if (!project.name || seen.has(project.name)) {
+        return;
+      }
+      seen.add(project.name);
+      scoped.push({
+        value: project.name,
+        label: `${project.name} · ${project.status}`,
+        status: project.status,
+      });
+    });
     return [ALL_OPTION, ...scoped];
   }, [projects]);
 
