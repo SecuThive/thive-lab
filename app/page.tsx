@@ -38,6 +38,13 @@ const ICON_MAP: Record<string, JSX.Element> = {
 
 const numberFormatter = new Intl.NumberFormat("en-US");
 
+type HeroStat = {
+  label: string;
+  value: string;
+  helper: string;
+  accent: string;
+};
+
 async function getProjects(): Promise<Project[]> {
   try {
     const { data, error } = await supabase
@@ -84,15 +91,30 @@ function getFocusAreas(projects: Project[]): string[] {
 // 페이지 데이터를 주기적으로 갱신 (60초마다)
 export const revalidate = 60;
 
-function buildHeroStats(projects: Project[]): Array<{ label: string; value: string }> {
+function buildHeroStats(projects: Project[]): HeroStat[] {
   const total = projects.length;
   const live = projects.filter((project) => project.status === "Live").length;
   const pipeline = projects.filter((project) => project.status !== "Live").length;
 
   return [
-    { label: "Projects Published", value: numberFormatter.format(total) },
-    { label: "Live Launches", value: numberFormatter.format(live) },
-    { label: "In Pipeline", value: numberFormatter.format(pipeline) },
+    {
+      label: "Projects Published",
+      value: numberFormatter.format(total),
+      helper: "Total hubs live across Thive",
+      accent: "bg-indigo-400",
+    },
+    {
+      label: "Live Launches",
+      value: numberFormatter.format(live),
+      helper: "Actively shipping right now",
+      accent: "bg-emerald-400",
+    },
+    {
+      label: "In Pipeline",
+      value: numberFormatter.format(pipeline),
+      helper: "Queued for upcoming drops",
+      accent: "bg-amber-300",
+    },
   ];
 }
 
@@ -196,17 +218,29 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              <dl className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-3">
                 {heroStats.map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-2xl border border-zinc-800/80 bg-zinc-950/70 px-5 py-4"
+                    className="group relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-zinc-950/80 via-zinc-950/20 to-zinc-900/40 px-5 py-5 shadow-[0_25px_80px_-60px_rgba(15,23,42,1)]"
                   >
-                    <dt className="text-xs uppercase tracking-[0.4em] text-zinc-500 break-words">{stat.label}</dt>
-                    <dd className="mt-3 text-2xl font-semibold text-white break-words">{stat.value}</dd>
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-500/20" />
+                    </div>
+                    <div className="relative space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] uppercase tracking-[0.45em] text-zinc-500">{stat.label}</p>
+                        <span className={`h-2.5 w-2.5 rounded-full ${stat.accent}`} />
+                      </div>
+                      <p className="text-3xl font-semibold text-white">{stat.value}</p>
+                      <p className="text-xs text-zinc-500">{stat.helper}</p>
+                    </div>
                   </div>
                 ))}
-              </dl>
+              </div>
             </div>
 
             <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/40 p-8">
