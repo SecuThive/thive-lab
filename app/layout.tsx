@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AdSenseScript } from "@/components/AdSense";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="bg-zinc-950">
       <head>
         <AdSenseScript />
+        <GoogleAnalytics />
       </head>
       <body className={`${inter.variable} bg-zinc-950`}>{children}</body>
     </html>
