@@ -61,6 +61,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="bg-zinc-950">
       <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Thive Lab RSS Feed"
+          href="/rss.xml"
+        />
         <AdSenseScript />
         <GoogleAnalytics />
       </head>
