@@ -75,7 +75,7 @@ function getFocusAreas(projects: Project[]): string[] {
   
   // 카테고리가 없으면 기본값 반환
   if (uniqueCategories.length === 0) {
-    return ["Pricing intelligence", "Hiring ops", "Finance automation"];
+    return ["Developer playbooks", "Automation APIs", "Community drops"];
   }
   
   return uniqueCategories;
@@ -95,9 +95,9 @@ async function getHeroStats(): Promise<Array<{ label: string; value: string }>> 
     if (error) {
       console.error("Failed to fetch hero stats:", error);
       return [
-        { label: "Automations Deployed", value: "38+" },
-        { label: "Average Launch Time", value: "9 days" },
-        { label: "Teams Supported", value: "24" },
+        { label: "Independent Projects", value: "12" },
+        { label: "Monthly Visitors", value: "48K" },
+        { label: "Community Members", value: "2.4K" },
       ];
     }
 
@@ -105,9 +105,9 @@ async function getHeroStats(): Promise<Array<{ label: string; value: string }>> 
   } catch (error) {
     console.error("Failed to fetch hero stats:", error);
     return [
-      { label: "Automations Deployed", value: "38+" },
-      { label: "Average Launch Time", value: "9 days" },
-      { label: "Teams Supported", value: "24" },
+      { label: "Independent Projects", value: "12" },
+      { label: "Monthly Visitors", value: "48K" },
+      { label: "Community Members", value: "2.4K" },
     ];
   }
 }
@@ -123,9 +123,9 @@ async function getPipeline(): Promise<Array<{ label: string; status: PipelineSta
     if (error) {
       console.error("Failed to fetch pipeline:", error);
       return [
-        { label: "Steam Scout API", status: "Live" },
-        { label: "Junior Jobs EU", status: "Beta" },
-        { label: "Subsidy AI alerts", status: "Soon" },
+        { label: "Atlas UI kit refresh", status: "Live" },
+        { label: "Docs search microsite", status: "Beta" },
+        { label: "Community templates vault", status: "Soon" },
       ];
     }
 
@@ -136,9 +136,9 @@ async function getPipeline(): Promise<Array<{ label: string; status: PipelineSta
   } catch (error) {
     console.error("Failed to fetch pipeline:", error);
     return [
-      { label: "Steam Scout API", status: "Live" },
-      { label: "Junior Jobs EU", status: "Beta" },
-      { label: "Subsidy AI alerts", status: "Soon" },
+      { label: "Atlas UI kit refresh", status: "Live" },
+      { label: "Docs search microsite", status: "Beta" },
+      { label: "Community templates vault", status: "Soon" },
     ];
   }
 }
@@ -154,9 +154,9 @@ async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
     if (error) {
       console.error("Failed to fetch build log:", error);
       return [
-        { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
-        { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
-        { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
+        { title: "Launchpad v2 docs shipped", date: "Jan 2026 / Release" },
+        { title: "Atlas kit tokens refreshed", date: "Dec 2025 / Update" },
+        { title: "Community vault research sprint", date: "Nov 2025 / Research" },
       ];
     }
 
@@ -164,9 +164,9 @@ async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
   } catch (error) {
     console.error("Failed to fetch build log:", error);
     return [
-      { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
-      { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
-      { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
+      { title: "Launchpad v2 docs shipped", date: "Jan 2026 / Release" },
+      { title: "Atlas kit tokens refreshed", date: "Dec 2025 / Update" },
+      { title: "Community vault research sprint", date: "Nov 2025 / Research" },
     ];
   }
 }
@@ -192,17 +192,17 @@ export default async function HomePage() {
             <Sparkles className="h-4 w-4 text-indigo-300" />
             <span>Thive Lab</span>
             <span className="h-1 w-1 rounded-full bg-indigo-400" />
-            <span>Automation Studio</span>
+            <span>Project Hub</span>
           </div>
 
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[58px] break-words">
-                  Building automation tools for modern teams.
+                  One home for every Thive Lab project.
                 </h1>
                 <p className="max-w-2xl text-lg text-zinc-400 lg:text-xl break-words">
-                  Automated utilities and data-driven services designed to eliminate busywork. We operate as your internal tooling team, delivering solutions focused on speed, clarity, and measurable results.
+                  This hub curates all public Thive Lab builds—developer resources, user-facing tools, API playgrounds, and shared playbooks. Track releases, read docs, and jump into the products that match your workflow.
                 </p>
               </div>
 
@@ -265,7 +265,7 @@ export default async function HomePage() {
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-5 text-xs text-zinc-500">Small pilots, measurable outcomes, shared playbooks.</p>
+                  <p className="mt-5 text-xs text-zinc-500">Cross-site upgrades roll out weekly—join the waitlist for previews.</p>
                 </div>
               </div>
               <div
@@ -279,10 +279,10 @@ export default async function HomePage() {
         <section id="projects" className="space-y-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Product stack</p>
-              <h2 className="text-3xl font-semibold text-white break-words">A bento grid of active labs</h2>
+              <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project network</p>
+              <h2 className="text-3xl font-semibold text-white break-words">Browse the Thive Lab hub</h2>
               <p className="max-w-2xl text-base text-zinc-400 break-words">
-                Each tile links to a focused utility—shipping pricing tools, hiring intelligence, finance automation, and data services that layer on your existing workflow.
+                Every tile represents a live site, micro SaaS, or shared knowledge drop. Discover launchpads for builders, lightweight tools for operators, and experiments that invite community feedback.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-zinc-500">
@@ -302,11 +302,11 @@ export default async function HomePage() {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/40 px-4 py-1.5 text-xs uppercase tracking-[0.35em] text-zinc-400">
               <Mail className="h-4 w-4 text-indigo-300" />
-              <span>Join Waitlist</span>
+              <span>Join Broadcast</span>
             </div>
-            <h3 className="text-3xl font-semibold text-white break-words">Stay in the loop.</h3>
+            <h3 className="text-3xl font-semibold text-white break-words">Stay connected to the hub.</h3>
             <p className="text-base leading-relaxed text-zinc-400 break-words">
-              Get early access to new tools, beta invites, and monthly updates on what we&apos;re building. No spam—just product news and pilot opportunities.
+              Receive drop notes across every Thive Lab property—release recaps, API updates, community calls, and opportunities to test upcoming sites.
             </p>
             <WaitlistForm />
             <div className="flex items-center gap-4 text-xs text-zinc-500">
@@ -334,14 +334,14 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-6 text-xs text-zinc-500">Follow along via GitHub or the waitlist to join the next build cycle.</p>
+            <p className="mt-6 text-xs text-zinc-500">Follow along via GitHub or the broadcast list to join the next release window.</p>
           </div>
         </section>
       </div>
 
       <footer className="border-t border-zinc-900/60 bg-zinc-950/90">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <p>© {year} Thive Lab. Built for global teams.</p>
+          <p>© {year} Thive Lab. Built as the hub for devs and users.</p>
           <div className="flex flex-wrap items-center gap-6 text-zinc-400">
             <Link href="/privacy" className="hover:text-indigo-300">
               Privacy
