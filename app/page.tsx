@@ -15,20 +15,6 @@ import ProjectCarousel from "@/components/ProjectCarousel";
 import { supabase } from "@/lib/supabase";
 import { WaitlistForm } from "@/components/WaitlistForm";
 
-const HERO_STATS = [
-  { label: "Automations Deployed", value: "38+" },
-  { label: "Average Launch Time", value: "9 days" },
-  { label: "Teams Supported", value: "24" },
-] as const;
-
-const FOCUS_AREAS = [
-  "Pricing intelligence",
-  "Hiring ops",
-  "Finance automation",
-  "Gov funding radar",
-  "Community data",
-] as const;
-
 type PipelineStatus = "Live" | "Beta" | "Soon";
 
 const PIPELINE_STATUS_STYLES: Record<PipelineStatus, string> = {
@@ -37,22 +23,10 @@ const PIPELINE_STATUS_STYLES: Record<PipelineStatus, string> = {
   Soon: "text-zinc-400",
 };
 
-const PIPELINE: Array<{ label: string; status: PipelineStatus }> = [
-  { label: "Steam Scout API", status: "Live" },
-  { label: "Junior Jobs EU", status: "Beta" },
-  { label: "Subsidy AI alerts", status: "Soon" },
-];
-
 const STATUS_LEGEND = [
   { label: "Live", color: "bg-emerald-400" },
   { label: "Beta", color: "bg-amber-300" },
   { label: "Coming Soon", color: "bg-zinc-500" },
-] as const;
-
-const LATEST_NOTES = [
-  { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
-  { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
-  { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
 ] as const;
 
 const ICON_MAP: Record<string, JSX.Element> = {
@@ -110,10 +84,100 @@ async function getFocusAreas(): Promise<string[]> {
   }
 }
 
+async function getHeroStats(): Promise<Array<{ label: string; value: string }>> {
+  try {
+    const { data, error } = await supabase
+      .from("hero_stats")
+      .select("label, value")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch hero stats:", error);
+      return [
+        { label: "Automations Deployed", value: "38+" },
+        { label: "Average Launch Time", value: "9 days" },
+        { label: "Teams Supported", value: "24" },
+      ];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Failed to fetch hero stats:", error);
+    return [
+      { label: "Automations Deployed", value: "38+" },
+      { label: "Average Launch Time", value: "9 days" },
+      { label: "Teams Supported", value: "24" },
+    ];
+  }
+}
+
+async function getPipeline(): Promise<Array<{ label: string; status: PipelineStatus }>> {
+  try {
+    const { data, error } = await supabase
+      .from("pipeline")
+      .select("label, status")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch pipeline:", error);
+      return [
+        { label: "Steam Scout API", status: "Live" },
+        { label: "Junior Jobs EU", status: "Beta" },
+        { label: "Subsidy AI alerts", status: "Soon" },
+      ];
+    }
+
+    return (data || []).map((item) => ({
+      label: item.label,
+      status: item.status as PipelineStatus,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch pipeline:", error);
+    return [
+      { label: "Steam Scout API", status: "Live" },
+      { label: "Junior Jobs EU", status: "Beta" },
+      { label: "Subsidy AI alerts", status: "Soon" },
+    ];
+  }
+}
+
+async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
+  try {
+    const { data, error } = await supabase
+      .from("build_log")
+      .select("title, date")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch build log:", error);
+      return [
+        { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
+        { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
+        { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
+      ];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Failed to fetch build log:", error);
+    return [
+      { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
+      { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
+      { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
+    ];
+  }
+}
+
 export default async function HomePage() {
   const year = new Date().getFullYear();
   const projects = await getProjects();
   const focusAreas = await getFocusAreas();
+  const heroStats = await getHeroStats();
+  const pipeline = await getPipeline();
+  const buildLog = await getBuildLog();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
@@ -161,7 +225,7 @@ export default async function HomePage() {
               </div>
 
               <dl className="grid gap-4 sm:grid-cols-3">
-                {HERO_STATS.map((stat) => (
+                {heroStats.map((stat) => (
                   <div
                     key={stat.label}
                     className="rounded-2xl border border-zinc-800/80 bg-zinc-950/70 px-5 py-4"
@@ -192,7 +256,7 @@ export default async function HomePage() {
                 <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
                   <p className="text-xs uppercase tracking-[0.45em] text-zinc-500">Currently incubating</p>
                   <ul className="mt-4 space-y-4 text-sm text-zinc-300">
-                    {PIPELINE.map((item) => (
+                    {pipeline.map((item) => (
                       <li key={item.label} className="flex items-center justify-between gap-4">
                         <span className="flex-1 break-words min-w-0">{item.label}</span>
                         <span className={`text-xs font-semibold shrink-0 ${PIPELINE_STATUS_STYLES[item.status]}`}>
@@ -251,7 +315,7 @@ export default async function HomePage() {
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-6">
             <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">Build log</p>
             <ul className="mt-5 space-y-4 text-sm text-zinc-300">
-              {LATEST_NOTES.map((note) => (
+              {buildLog.map((note) => (
                 <li
                   key={note.title}
                   className="flex items-start justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0"
