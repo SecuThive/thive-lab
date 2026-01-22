@@ -57,6 +57,7 @@ async function getProjects(): Promise<Project[]> {
       link: project.link,
       icon: ICON_MAP[project.icon_name] || ICON_MAP.Radar,
       layout: project.layout,
+      category: project.category,
     }));
   } catch (error) {
     console.error("Failed to fetch projects:", error);
@@ -64,24 +65,20 @@ async function getProjects(): Promise<Project[]> {
   }
 }
 
-async function getFocusAreas(): Promise<string[]> {
-  try {
-    const { data, error } = await supabase
-      .from("focus_areas")
-      .select("title")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
-
-    if (error) {
-      console.error("Failed to fetch focus areas:", error);
-      return ["Pricing intelligence", "Hiring ops", "Finance automation"];
-    }
-
-    return (data || []).map((area) => area.title);
-  } catch (error) {
-    console.error("Failed to fetch focus areas:", error);
+async function getFocusAreas(projects: Project[]): Promise<string[]> {
+  // 프로젝트에서 카테고리 추출 (중복 제거)
+  const categories = projects
+    .map((project) => project.category)
+    .filter((category): category is string => !!category);
+  
+  const uniqueCategories = Array.from(new Set(categories));
+  
+  // 카테고리가 없으면 기본값 반환
+  if (uniqueCategories.length === 0) {
     return ["Pricing intelligence", "Hiring ops", "Finance automation"];
   }
+  
+  return uniqueCategories;
 }
 
 async function getHeroStats(): Promise<Array<{ label: string; value: string }>> {
@@ -174,7 +171,7 @@ async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
 export default async function HomePage() {
   const year = new Date().getFullYear();
   const projects = await getProjects();
-  const focusAreas = await getFocusAreas();
+  const focusAreas = getFocusAreas(projects);
   const heroStats = await getHeroStats();
   const pipeline = await getPipeline();
   const buildLog = await getBuildLog();

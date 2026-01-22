@@ -14,6 +14,7 @@ export type Project = {
   link: string;
   icon: ReactNode;
   layout?: string;
+  category?: string;
 };
 
 type ProjectCardProps = {

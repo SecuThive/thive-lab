@@ -17,6 +17,7 @@ export type Database = {
           link: string;
           icon_name: string;
           layout: string;
+          category?: string;
           created_at: string;
           updated_at: string;
         };
@@ -28,6 +29,7 @@ export type Database = {
           link: string;
           icon_name: string;
           layout: string;
+          category?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -39,6 +41,7 @@ export type Database = {
           link?: string;
           icon_name?: string;
           layout?: string;
+          category?: string;
           created_at?: string;
           updated_at?: string;
         };
