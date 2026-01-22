@@ -65,7 +65,7 @@ async function getProjects(): Promise<Project[]> {
   }
 }
 
-async function getFocusAreas(projects: Project[]): Promise<string[]> {
+function getFocusAreas(projects: Project[]): string[] {
   // 프로젝트에서 카테고리 추출 (중복 제거)
   const categories = projects
     .map((project) => project.category)
@@ -303,7 +303,7 @@ export default async function HomePage() {
             </div>
             <h3 className="text-3xl font-semibold text-white break-words">Stay in the loop.</h3>
             <p className="text-base leading-relaxed text-zinc-400 break-words">
-              Get early access to new tools, beta invites, and monthly updates on what we're building. No spam—just product news and pilot opportunities.
+              Get early access to new tools, beta invites, and monthly updates on what we&apos;re building. No spam—just product news and pilot opportunities.
             </p>
             <WaitlistForm />
             <div className="flex items-center gap-4 text-xs text-zinc-500">
