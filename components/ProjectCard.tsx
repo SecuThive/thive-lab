@@ -1,6 +1,9 @@
-import Link from "next/link";
+"use client";
+
 import { ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { useState } from "react";
+import ProjectModal from "./ProjectModal";
 
 export type ProjectStatus = "Live" | "Beta" | "Coming Soon";
 
@@ -82,7 +85,8 @@ const Overlay = () => (
 );
 
 export default function ProjectCard({ project, className }: ProjectCardProps) {
-  const isDisabled = project.link === "#";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const body = (
     <div className={innerClasses}>
       <CardBody project={project} />
@@ -90,29 +94,24 @@ export default function ProjectCard({ project, className }: ProjectCardProps) {
   );
   const cardClasses = combineClasses(baseCardClasses, className);
 
-  if (isDisabled) {
-    return (
-      <div className={combineClasses(cardClasses, "cursor-not-allowed opacity-90 backdrop-blur-xl")}
-        aria-disabled
+  return (
+    <>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className={combineClasses(
+          cardClasses,
+          "w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500"
+        )}
       >
         {body}
         <Overlay />
-      </div>
-    );
-  }
+      </button>
 
-  return (
-    <Link
-      href={project.link}
-      target="_blank"
-      rel="noreferrer"
-      className={combineClasses(
-        cardClasses,
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500"
-      )}
-    >
-      {body}
-      <Overlay />
-    </Link>
+      <ProjectModal
+        project={project}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 }
