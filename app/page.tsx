@@ -81,6 +81,9 @@ function getFocusAreas(projects: Project[]): string[] {
   return uniqueCategories;
 }
 
+// 페이지 데이터를 주기적으로 갱신 (60초마다)
+export const revalidate = 60;
+
 async function getHeroStats(): Promise<Array<{ label: string; value: string }>> {
   try {
     const { data, error } = await supabase
