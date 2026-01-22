@@ -11,13 +11,11 @@ import {
   WalletMinimal,
 } from "lucide-react";
 import ProjectCard, { type Project } from "@/components/ProjectCard";
-import { supabase } from "@/lib/supabase";
-import { WaitlistForm } from "@/components/WaitlistForm";
 
 const HERO_STATS = [
-  { label: "Automations Deployed", value: "38+" },
-  { label: "Average Launch Time", value: "9 days" },
-  { label: "Teams Supported", value: "24" },
+  { label: "Automations shipped", value: "38+" },
+  { label: "Launch cadence", value: "9 days" },
+  { label: "Teams served", value: "24" },
 ] as const;
 
 const FOCUS_AREAS = [
@@ -54,65 +52,59 @@ const LATEST_NOTES = [
   { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
 ] as const;
 
-const ICON_MAP: Record<string, JSX.Element> = {
-  Radar: <Radar className="h-5 w-5 text-indigo-300" />,
-  BriefcaseBusiness: <BriefcaseBusiness className="h-5 w-5 text-indigo-300" />,
-  Bot: <Bot className="h-5 w-5 text-indigo-300" />,
-  WalletMinimal: <WalletMinimal className="h-5 w-5 text-indigo-300" />,
-  Database: <Database className="h-5 w-5 text-indigo-300" />,
-  Cpu: <Cpu className="h-5 w-5 text-indigo-300" />,
-};
+const PROJECTS: Project[] = [
+  {
+    name: "Steam Scout",
+    status: "Live",
+    description: "Price intelligence for Steam hardware with archived drop history.",
+    link: "https://steam.thivelab.com",
+    icon: <Radar className="h-5 w-5 text-indigo-300" />,
+    layout: "sm:col-span-3 sm:row-span-2",
+  },
+  {
+    name: "Junior Jobs",
+    status: "Beta",
+    description: "Signal-based job board for emerging talent with daily scrapes and filters.",
+    link: "#",
+    icon: <BriefcaseBusiness className="h-5 w-5 text-indigo-300" />,
+    layout: "sm:col-span-3",
+  },
+  {
+    name: "Subsidy AI",
+    status: "Coming Soon",
+    description: "Gov incentives radar tuned to your stack, geography, and hiring plan.",
+    link: "#",
+    icon: <Bot className="h-5 w-5 text-indigo-300" />,
+    layout: "sm:col-span-2",
+  },
+  {
+    name: "Ledger Pulse",
+    status: "Live",
+    description: "Finance cockpit to monitor MRR, burn, and cash runway in a single view.",
+    link: "https://finance.thivelab.com",
+    icon: <WalletMinimal className="h-5 w-5 text-indigo-300" />,
+    layout: "sm:col-span-2",
+  },
+  {
+    name: "Signal Vault",
+    status: "Beta",
+    description: "Ops telemetry overlays that merge product analytics, support, and alerting.",
+    link: "https://ops.thivelab.com",
+    icon: <Database className="h-5 w-5 text-indigo-300" />,
+    layout: "sm:col-span-4",
+  },
+  {
+    name: "Relay Forms",
+    status: "Coming Soon",
+    description: "Adaptive intake forms that sync structured data into your ops stack automatically.",
+    link: "#",
+    icon: <Cpu className="h-5 w-5 text-indigo-300" />,
+    layout: "sm:col-span-2",
+  },
+];
 
-async function getProjects(): Promise<Project[]> {
-  try {
-    const { data, error } = await supabase
-      .from("projects")
-      .select("*")
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("Failed to fetch projects:", error);
-      return [];
-    }
-
-    return (data || []).map((project) => ({
-      name: project.name,
-      status: project.status as Project["status"],
-      description: project.description,
-      link: project.link,
-      icon: ICON_MAP[project.icon_name] || ICON_MAP.Radar,
-      layout: project.layout,
-    }));
-  } catch (error) {
-    console.error("Failed to fetch projects:", error);
-    return [];
-  }
-}
-
-async function getFocusAreas(): Promise<string[]> {
-  try {
-    const { data, error } = await supabase
-      .from("focus_areas")
-      .select("title")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
-
-    if (error) {
-      console.error("Failed to fetch focus areas:", error);
-      return ["Pricing intelligence", "Hiring ops", "Finance automation"];
-    }
-
-    return (data || []).map((area) => area.title);
-  } catch (error) {
-    console.error("Failed to fetch focus areas:", error);
-    return ["Pricing intelligence", "Hiring ops", "Finance automation"];
-  }
-}
-
-export default async function HomePage() {
+export default function HomePage() {
   const year = new Date().getFullYear();
-  const projects = await getProjects();
-  const focusAreas = await getFocusAreas();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
@@ -134,10 +126,10 @@ export default async function HomePage() {
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[58px] break-words">
-                  Building automation tools for modern teams.
+                  Building tools for the modern web.
                 </h1>
                 <p className="max-w-2xl text-lg text-zinc-400 lg:text-xl break-words">
-                  Automated utilities and data-driven services designed to eliminate busywork. We operate as your internal tooling team, delivering solutions focused on speed, clarity, and measurable results.
+                  Automated utilities and data services designed to erase busywork. We operate like an internal tooling team for founders that care about speed, clarity, and measurable outcomes.
                 </p>
               </div>
 
@@ -150,7 +142,7 @@ export default async function HomePage() {
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="https://github.com/secuthive"
+                  href="https://github.com/thivelab"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center rounded-full border border-zinc-800 px-6 py-3 text-sm font-semibold text-zinc-100 hover:border-indigo-500/50"
@@ -177,7 +169,7 @@ export default async function HomePage() {
                 <div>
                   <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">Focus areas</p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {focusAreas.map((area) => (
+                    {FOCUS_AREAS.map((area) => (
                       <span
                         key={area}
                         className="rounded-full border border-zinc-800/70 bg-zinc-950/60 px-3 py-1 text-xs text-zinc-300 break-words"
@@ -231,7 +223,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:auto-rows-[270px] sm:grid-cols-6 sm:grid-flow-dense">
-            {projects.map((project) => (
+            {PROJECTS.map((project) => (
               <ProjectCard
                 key={project.name}
                 project={project}
@@ -251,7 +243,21 @@ export default async function HomePage() {
             <p className="text-base text-zinc-400 break-words">
               Monthly changelog covering new utilities, research drops, and open pilot slots. No noise, just shipping notes.
             </p>
-            <WaitlistForm />
+            <form className="flex flex-col gap-3 sm:flex-row" action="#" method="post">
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="you@company.com"
+                className="flex-1 rounded-2xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none min-w-0"
+              />
+              <button
+                type="submit"
+                className="rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 whitespace-nowrap"
+              >
+                Join Waitlist
+              </button>
+            </form>
             <p className="text-xs text-zinc-500">No spam. Unsubscribe anytime.</p>
           </div>
 
@@ -275,22 +281,19 @@ export default async function HomePage() {
 
       <footer className="border-t border-zinc-900/60 bg-zinc-950/90">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <p>© {year} Thive Lab. Built for global teams.</p>
+          <p>© {year} Thive Lab. Crafted in Seoul.</p>
           <div className="flex flex-wrap items-center gap-6 text-zinc-400">
-            <Link href="/privacy" className="hover:text-indigo-300">
-              Privacy
+            <Link href="/admin" className="hover:text-indigo-300">
+              Admin
             </Link>
-            <Link href="/terms" className="hover:text-indigo-300">
-              Terms
-            </Link>
-            <Link href="https://github.com/secuthive" target="_blank" rel="noreferrer" className="hover:text-indigo-300">
+            <Link href="https://github.com/thivelab" target="_blank" rel="noreferrer" className="hover:text-indigo-300">
               GitHub
             </Link>
-            <Link href="https://x.com/devthive" target="_blank" rel="noreferrer" className="hover:text-indigo-300">
-              X (Twitter)
+            <Link href="https://twitter.com/thivelab" target="_blank" rel="noreferrer" className="hover:text-indigo-300">
+              Twitter
             </Link>
-            <a href="mailto:thive8564@gmail.com" className="hover:text-indigo-300">
-              Contact
+            <a href="mailto:hi@thivelab.com" className="hover:text-indigo-300">
+              hi@thivelab.com
             </a>
           </div>
         </div>

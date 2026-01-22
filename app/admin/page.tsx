@@ -15,9 +15,9 @@ import {
   Database,
   Cpu,
   LogOut,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
-import type { Project } from "@/components/ProjectCard";
 
 const ICON_OPTIONS = {
   Radar: <Radar className="h-5 w-5" />,
@@ -28,58 +28,18 @@ const ICON_OPTIONS = {
   Cpu: <Cpu className="h-5 w-5" />,
 };
 
-const INITIAL_PROJECTS: Project[] = [
-  {
-    name: "Steam Scout",
-    status: "Live",
-    description: "Price intelligence for Steam hardware with archived drop history.",
-    link: "https://steam.thivelab.com",
-    icon: ICON_OPTIONS.Radar,
-    layout: "sm:col-span-3 sm:row-span-2",
-  },
-  {
-    name: "Junior Jobs",
-    status: "Beta",
-    description: "Signal-based job board for emerging talent with daily scrapes and filters.",
-    link: "#",
-    icon: ICON_OPTIONS.BriefcaseBusiness,
-    layout: "sm:col-span-3",
-  },
-  {
-    name: "Subsidy AI",
-    status: "Coming Soon",
-    description: "Gov incentives radar tuned to your stack, geography, and hiring plan.",
-    link: "#",
-    icon: ICON_OPTIONS.Bot,
-    layout: "sm:col-span-2",
-  },
-  {
-    name: "Ledger Pulse",
-    status: "Live",
-    description: "Finance cockpit to monitor MRR, burn, and cash runway in a single view.",
-    link: "https://finance.thivelab.com",
-    icon: ICON_OPTIONS.WalletMinimal,
-    layout: "sm:col-span-2",
-  },
-  {
-    name: "Signal Vault",
-    status: "Beta",
-    description: "Ops telemetry overlays that merge product analytics, support, and alerting.",
-    link: "https://ops.thivelab.com",
-    icon: ICON_OPTIONS.Database,
-    layout: "sm:col-span-4",
-  },
-  {
-    name: "Relay Forms",
-    status: "Coming Soon",
-    description: "Adaptive intake forms that sync structured data into your ops stack automatically.",
-    link: "#",
-    icon: ICON_OPTIONS.Cpu,
-    layout: "sm:col-span-2",
-  },
-];
+type DBProject = {
+  id: number;
+  name: string;
+  status: "Live" | "Beta" | "Coming Soon";
+  description: string;
+  link: string;
+  icon_name: string;
+  layout: string;
+};
 
 type FormData = {
+  id?: number;
   name: string;
   status: "Live" | "Beta" | "Coming Soon";
   description: string;
@@ -101,28 +61,137 @@ export default function AdminPage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState<DBProject[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // 로그인 확인
     const token = sessionStorage.getItem("admin_token");
     if (!token) {
       router.push("/admin/login");
     } else {
       setIsAuthenticated(true);
-      setIsLoading(false);
+      loadProjects();
     }
   }, [router]);
+
+  const loadProjects = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/projects");
+      const result = await response.json();
+      
+      if (result.success) {
+        setProjects(result.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+      alert("프로젝트 로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     sessionStorage.removeItem("admin_token");
     router.push("/admin/login");
   };
 
-  if (isLoading) {
+  const handleOpenForm = (project?: DBProject) => {
+    if (project) {
+      setFormData({
+        id: project.id,
+        name: project.name,
+        status: project.status,
+        description: project.description,
+        link: project.link,
+        iconName: (project.icon_name as keyof typeof ICON_OPTIONS) || "Radar",
+        layout: project.layout,
+      });
+    } else {
+      setFormData(EMPTY_FORM);
+    }
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setFormData(EMPTY_FORM);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+
+    try {
+      const token = sessionStorage.getItem("admin_token");
+      const body = {
+        id: formData.id,
+        name: formData.name,
+        status: formData.status,
+        description: formData.description,
+        link: formData.link,
+        icon_name: formData.iconName,
+        layout: formData.layout,
+      };
+
+      const url = "/api/projects";
+      const method = formData.id ? "PUT" : "POST";
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await loadProjects();
+        handleCloseForm();
+      } else {
+        alert(result.message || "저장 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("Failed to save project:", error);
+      alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("이 프로젝트를 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const token = sessionStorage.getItem("admin_token");
+      const response = await fetch(`/api/projects?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        await loadProjects();
+      } else {
+        alert(result.message || "삭제 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
         <div className="text-zinc-400">로딩 중...</div>
@@ -133,60 +202,6 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return null;
   }
-
-  const handleOpenForm = (index?: number) => {
-    if (index !== undefined) {
-      const project = projects[index];
-      const iconName = Object.keys(ICON_OPTIONS).find(
-        (key) => ICON_OPTIONS[key as keyof typeof ICON_OPTIONS] === project.icon
-      ) as keyof typeof ICON_OPTIONS || "Radar";
-      
-      setFormData({
-        name: project.name,
-        status: project.status,
-        description: project.description,
-        link: project.link,
-        iconName,
-        layout: project.layout || "sm:col-span-3",
-      });
-      setEditingIndex(index);
-    } else {
-      setFormData(EMPTY_FORM);
-      setEditingIndex(null);
-    }
-    setIsFormOpen(true);
-  };
-
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setEditingIndex(null);
-    setFormData(EMPTY_FORM);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newProject: Project = {
-      ...formData,
-      icon: ICON_OPTIONS[formData.iconName],
-    };
-
-    if (editingIndex !== null) {
-      const updated = [...projects];
-      updated[editingIndex] = newProject;
-      setProjects(updated);
-    } else {
-      setProjects([...projects, newProject]);
-    }
-
-    handleCloseForm();
-  };
-
-  const handleDelete = (index: number) => {
-    if (confirm("이 프로젝트를 삭제하시겠습니까?")) {
-      setProjects(projects.filter((_, i) => i !== index));
-    }
-  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -202,9 +217,17 @@ export default function AdminPage() {
               메인으로 돌아가기
             </Link>
             <h1 className="text-4xl font-semibold text-white">프로젝트 관리</h1>
-            <p className="text-zinc-400">프로젝트를 추가, 수정, 삭제할 수 있습니다.</p>
+            <p className="text-zinc-400">Supabase DB를 통한 프로젝트 관리</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={loadProjects}
+              className="flex items-center gap-2 rounded-2xl border border-zinc-800 px-6 py-3 text-sm font-semibold text-zinc-300 transition hover:border-indigo-500/50"
+              title="새로고침"
+            >
+              <RefreshCw className="h-4 w-4" />
+              새로고침
+            </button>
             <button
               onClick={() => handleOpenForm()}
               className="flex items-center gap-2 rounded-2xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
@@ -224,103 +247,126 @@ export default function AdminPage() {
         </div>
 
         {/* Projects Table */}
-        <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/40">
-          <table className="w-full">
-            <thead className="border-b border-zinc-800 bg-zinc-950/60">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  아이콘
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  프로젝트명
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  상태
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  설명
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  링크
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  레이아웃
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                  작업
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {projects.map((project, index) => (
-                <tr key={index} className="transition hover:bg-zinc-800/30">
-                  <td className="px-6 py-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300">
-                      {project.icon}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-white">{project.name}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                        project.status === "Live"
-                          ? "bg-emerald-500/10 text-emerald-200"
-                          : project.status === "Beta"
-                          ? "bg-amber-500/10 text-amber-200"
-                          : "bg-zinc-800/80 text-zinc-300"
-                      }`}
-                    >
-                      {project.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="max-w-md text-sm text-zinc-400 line-clamp-2">
-                      {project.description}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {project.link !== "#" ? (
-                      <a
-                        href={project.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-indigo-300 hover:text-indigo-200"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        링크
-                      </a>
-                    ) : (
-                      <span className="text-sm text-zinc-600">-</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <code className="text-xs text-zinc-500">{project.layout || "-"}</code>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleOpenForm(index)}
-                        className="rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-indigo-300"
-                        title="수정"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(index)}
-                        className="rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-red-400"
-                        title="삭제"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-zinc-400">데이터를 불러오는 중...</div>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-12 text-center">
+            <p className="text-zinc-400">등록된 프로젝트가 없습니다.</p>
+            <button
+              onClick={() => handleOpenForm()}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+            >
+              <Plus className="h-4 w-4" />
+              첫 프로젝트 추가하기
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/40">
+            <table className="w-full">
+              <thead className="border-b border-zinc-800 bg-zinc-950/60">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    ID
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    아이콘
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    프로젝트명
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    상태
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    설명
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    링크
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    레이아웃
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    작업
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/50">
+                {projects.map((project) => (
+                  <tr key={project.id} className="transition hover:bg-zinc-800/30">
+                    <td className="px-6 py-4">
+                      <span className="text-xs text-zinc-500">#{project.id}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-300">
+                        {ICON_OPTIONS[project.icon_name as keyof typeof ICON_OPTIONS] || ICON_OPTIONS.Radar}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-white">{project.name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                          project.status === "Live"
+                            ? "bg-emerald-500/10 text-emerald-200"
+                            : project.status === "Beta"
+                            ? "bg-amber-500/10 text-amber-200"
+                            : "bg-zinc-800/80 text-zinc-300"
+                        }`}
+                      >
+                        {project.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="max-w-md text-sm text-zinc-400 line-clamp-2">
+                        {project.description}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {project.link !== "#" ? (
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-indigo-300 hover:text-indigo-200"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          링크
+                        </a>
+                      ) : (
+                        <span className="text-sm text-zinc-600">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <code className="text-xs text-zinc-500">{project.layout || "-"}</code>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenForm(project)}
+                          className="rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-indigo-300"
+                          title="수정"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(project.id)}
+                          className="rounded-lg p-2 text-zinc-400 transition hover:bg-zinc-800 hover:text-red-400"
+                          title="삭제"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Form Modal */}
         {isFormOpen && (
@@ -328,7 +374,7 @@ export default function AdminPage() {
             <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900 shadow-2xl">
               <div className="border-b border-zinc-800 px-8 py-6">
                 <h2 className="text-2xl font-semibold text-white">
-                  {editingIndex !== null ? "프로젝트 수정" : "새 프로젝트 추가"}
+                  {formData.id ? "프로젝트 수정" : "새 프로젝트 추가"}
                 </h2>
               </div>
 
@@ -428,17 +474,22 @@ export default function AdminPage() {
                   {/* Layout */}
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-zinc-300">
-                      레이아웃 클래스
+                      레이아웃 크기 *
                     </label>
-                    <input
-                      type="text"
+                    <select
+                      required
                       value={formData.layout}
                       onChange={(e) => setFormData({ ...formData, layout: e.target.value })}
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-white placeholder:text-zinc-600 focus:border-indigo-500 focus:outline-none"
-                      placeholder="예: sm:col-span-3"
-                    />
+                      className="w-full rounded-xl border border-zinc-800 bg-zinc-950/80 px-4 py-3 text-white focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="sm:col-span-2">작은 카드 (2칸)</option>
+                      <option value="sm:col-span-3">중간 카드 (3칸)</option>
+                      <option value="sm:col-span-4">큰 카드 (4칸)</option>
+                      <option value="sm:col-span-6">전체 너비 (6칸)</option>
+                      <option value="sm:col-span-3 sm:row-span-2">세로 긴 카드 (3칸 x 2칸)</option>
+                    </select>
                     <p className="mt-1 text-xs text-zinc-500">
-                      Tailwind grid 클래스 (sm:col-span-3, sm:row-span-2 등)
+                      그리드에서 카드가 차지할 크기를 선택하세요
                     </p>
                   </div>
                 </div>
@@ -448,15 +499,17 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={handleCloseForm}
-                    className="flex-1 rounded-xl border border-zinc-800 px-6 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800"
+                    disabled={isSaving}
+                    className="flex-1 rounded-xl border border-zinc-800 px-6 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-50"
                   >
                     취소
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 rounded-xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400"
+                    disabled={isSaving}
+                    className="flex-1 rounded-xl bg-indigo-500/90 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:opacity-50"
                   >
-                    {editingIndex !== null ? "수정" : "추가"}
+                    {isSaving ? "저장 중..." : formData.id ? "수정" : "추가"}
                   </button>
                 </div>
               </form>
