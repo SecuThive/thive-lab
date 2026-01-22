@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   creator: "Thive Lab",
   publisher: "Thive Lab",
   metadataBase: new URL("https://thivelab.com"),
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+  },
   alternates: {
     canonical: "https://thivelab.com",
   },
