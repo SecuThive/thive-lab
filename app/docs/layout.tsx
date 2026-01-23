@@ -29,39 +29,11 @@ export default function DocsLayout({
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-lg">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
-                <span className="text-sm font-bold text-white">TL</span>
-              </div>
-              <span className="text-lg font-semibold text-white">ThiveLab</span>
-            </Link>
-            <nav className="flex items-center gap-6">
-              <Link
-                href="/docs"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-              >
-                Documentation
-              </Link>
-              <Link
-                href="/"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-              >
-                Home
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex gap-8 py-8">
           {/* Sidebar */}
           <aside className="hidden w-64 shrink-0 lg:block">
-            <nav className="sticky top-24 space-y-8">
+            <nav className="sticky top-20 space-y-8">
               {navigation.map((section) => (
                 <div key={section.title}>
                   <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
