@@ -1,38 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { ratelimit } from "@/lib/rate-limit";
+import { simpleRateLimit } from "@/lib/simple-rate-limit";
 
-export const runtime = "edge";
+// Use Node.js runtime for rate limiting state
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    // Rate limiting (optional - only if Upstash is configured)
+    const ip = request.ip ?? request.headers.get("x-forwarded-for") ?? "127.0.0.1";
+    
+    // Rate limiting (try Upstash first, fallback to simple in-memory)
     let rateLimitHeaders = {};
+    let rateLimitSuccess = true;
+    
     try {
-      const ip = request.ip ?? request.headers.get("x-forwarded-for") ?? "127.0.0.1";
       const { success, limit, reset, remaining } = await ratelimit.limit(ip);
-
+      
       rateLimitHeaders = {
         "X-RateLimit-Limit": limit.toString(),
         "X-RateLimit-Remaining": remaining.toString(),
         "X-RateLimit-Reset": new Date(reset).toISOString(),
       };
-
-      if (!success) {
-        return NextResponse.json(
-          {
-            error: "Rate limit exceeded",
-            message: "Too many requests. Please try again later.",
-          },
-          {
-            status: 429,
-            headers: rateLimitHeaders,
-          }
-        );
-      }
+      
+      rateLimitSuccess = success;
     } catch (rateLimitError) {
-      console.warn("Rate limiting not configured:", rateLimitError);
-      // Continue without rate limiting if Upstash is not configured
+      // Fallback to simple in-memory rate limiter
+      console.warn("Upstash not configured, using simple rate limiter");
+      const { success, limit, reset, remaining } = simpleRateLimit(ip, 10, 10000);
+      
+      rateLimitHeaders = {
+        "X-RateLimit-Limit": limit.toString(),
+        "X-RateLimit-Remaining": remaining.toString(),
+        "X-RateLimit-Reset": new Date(reset).toISOString(),
+      };
+      
+      rateLimitSuccess = success;
+    }
+    
+    if (!rateLimitSuccess) {
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          message: "Too many requests. Please try again later.",
+        },
+        {
+          status: 429,
+          headers: rateLimitHeaders,
+        }
+      );
     }
 
     // Parse query parameters
