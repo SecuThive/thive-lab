@@ -4,6 +4,7 @@ import "./globals.css";
 import { AdSenseScript } from "@/components/AdSense";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import Navbar from "@/components/Navbar";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -15,6 +16,12 @@ export const metadata: Metadata = {
   creator: "Thive Lab",
   publisher: "Thive Lab",
   metadataBase: new URL("https://thivelab.com"),
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+  },
   alternates: {
     canonical: "https://thivelab.com",
   },
@@ -74,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.variable} bg-zinc-950`}>
         <Navbar />
         {children}
+        <Analytics />
       </body>
     </html>
   );

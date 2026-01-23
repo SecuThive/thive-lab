@@ -15,6 +15,7 @@ export type Project = {
   icon: ReactNode;
   layout?: string;
   category?: string;
+  created_at?: string | null;
 };
 
 type ProjectCardProps = {

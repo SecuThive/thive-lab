@@ -5,6 +5,17 @@ CREATE TABLE IF NOT EXISTS waitlist (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS broadcast_subscribers (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  project_preference TEXT,
+  notify_on_launch BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS broadcast_subscribers_email_project_idx
+ON broadcast_subscribers (email, COALESCE(project_preference, 'all'));
+
 -- Focus areas 테이블 생성
 CREATE TABLE IF NOT EXISTS focus_areas (
   id BIGSERIAL PRIMARY KEY,
@@ -33,11 +44,14 @@ ON CONFLICT DO NOTHING;
 
 -- RLS 활성화
 ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE broadcast_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE focus_areas ENABLE ROW LEVEL SECURITY;
 
 -- 기존 정책 삭제 (있다면)
 DROP POLICY IF EXISTS "Enable insert for all users" ON waitlist;
 DROP POLICY IF EXISTS "Disable select for all users" ON waitlist;
+DROP POLICY IF EXISTS "Enable insert for broadcasts" ON broadcast_subscribers;
+DROP POLICY IF EXISTS "Disable select for broadcasts" ON broadcast_subscribers;
 DROP POLICY IF EXISTS "Enable read access for all users" ON focus_areas;
 DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON focus_areas;
 DROP POLICY IF EXISTS "Enable update for authenticated users only" ON focus_areas;
@@ -48,6 +62,12 @@ CREATE POLICY "Enable insert for all users" ON waitlist
 FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Disable select for all users" ON waitlist
+FOR SELECT USING (false);
+
+CREATE POLICY "Enable insert for broadcasts" ON broadcast_subscribers
+FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Disable select for broadcasts" ON broadcast_subscribers
 FOR SELECT USING (false);
 
 -- Focus areas 정책: 모든 사용자가 활성화된 것만 읽기 가능

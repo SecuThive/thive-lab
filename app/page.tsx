@@ -10,17 +10,15 @@ import {
   Sparkles,
   WalletMinimal,
 } from "lucide-react";
-import { type Project } from "@/components/ProjectCard";
+import { type Project, type ProjectStatus } from "@/components/ProjectCard";
 import ProjectCarousel from "@/components/ProjectCarousel";
 import { supabase } from "@/lib/supabase";
 import { WaitlistForm } from "@/components/WaitlistForm";
 
-type PipelineStatus = "Live" | "Beta" | "Soon";
-
-const PIPELINE_STATUS_STYLES: Record<PipelineStatus, string> = {
+const PIPELINE_STATUS_STYLES: Record<ProjectStatus, string> = {
   Live: "text-emerald-300",
   Beta: "text-amber-200",
-  Soon: "text-zinc-400",
+  "Coming Soon": "text-zinc-400",
 };
 
 const STATUS_LEGEND = [
@@ -36,6 +34,16 @@ const ICON_MAP: Record<string, JSX.Element> = {
   WalletMinimal: <WalletMinimal className="h-5 w-5 text-indigo-300" />,
   Database: <Database className="h-5 w-5 text-indigo-300" />,
   Cpu: <Cpu className="h-5 w-5 text-indigo-300" />,
+};
+
+const numberFormatter = new Intl.NumberFormat("en-US");
+const timelineFormatter = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
+
+type HeroStat = {
+  label: string;
+  value: string;
+  helper: string;
+  accent: string;
 };
 
 async function getProjects(): Promise<Project[]> {
@@ -58,6 +66,7 @@ async function getProjects(): Promise<Project[]> {
       icon: ICON_MAP[project.icon_name] || ICON_MAP.Radar,
       layout: project.layout,
       category: project.category,
+      created_at: project.created_at,
     }));
   } catch (error) {
     console.error("Failed to fetch projects:", error);
@@ -75,7 +84,7 @@ function getFocusAreas(projects: Project[]): string[] {
   
   // 카테고리가 없으면 기본값 반환
   if (uniqueCategories.length === 0) {
-    return ["Pricing intelligence", "Hiring ops", "Finance automation"];
+    return ["Developer playbooks", "Automation APIs", "Community drops"];
   }
   
   return uniqueCategories;
@@ -84,100 +93,83 @@ function getFocusAreas(projects: Project[]): string[] {
 // 페이지 데이터를 주기적으로 갱신 (60초마다)
 export const revalidate = 60;
 
-async function getHeroStats(): Promise<Array<{ label: string; value: string }>> {
-  try {
-    const { data, error } = await supabase
-      .from("hero_stats")
-      .select("label, value")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+function buildHeroStats(projects: Project[]): HeroStat[] {
+  const total = projects.length;
+  const live = projects.filter((project) => project.status === "Live").length;
+  const pipeline = projects.filter((project) => project.status !== "Live").length;
 
-    if (error) {
-      console.error("Failed to fetch hero stats:", error);
-      return [
-        { label: "Automations Deployed", value: "38+" },
-        { label: "Average Launch Time", value: "9 days" },
-        { label: "Teams Supported", value: "24" },
-      ];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Failed to fetch hero stats:", error);
-    return [
-      { label: "Automations Deployed", value: "38+" },
-      { label: "Average Launch Time", value: "9 days" },
-      { label: "Teams Supported", value: "24" },
-    ];
-  }
+  return [
+    {
+      label: "Projects Published",
+      value: numberFormatter.format(total),
+      helper: "Total hubs live across Thive",
+      accent: "bg-indigo-400",
+    },
+    {
+      label: "Live Launches",
+      value: numberFormatter.format(live),
+      helper: "Actively shipping right now",
+      accent: "bg-emerald-400",
+    },
+    {
+      label: "In Pipeline",
+      value: numberFormatter.format(pipeline),
+      helper: "Queued for upcoming drops",
+      accent: "bg-amber-300",
+    },
+  ];
 }
 
-async function getPipeline(): Promise<Array<{ label: string; status: PipelineStatus }>> {
-  try {
-    const { data, error } = await supabase
-      .from("pipeline")
-      .select("label, status")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+type PipelineItem = { label: string; status: ProjectStatus; category?: string };
 
-    if (error) {
-      console.error("Failed to fetch pipeline:", error);
-      return [
-        { label: "Steam Scout API", status: "Live" },
-        { label: "Junior Jobs EU", status: "Beta" },
-        { label: "Subsidy AI alerts", status: "Soon" },
-      ];
-    }
+const STATUS_PRIORITY: Record<ProjectStatus, number> = {
+  Live: 0,
+  Beta: 1,
+  "Coming Soon": 2,
+};
 
-    return (data || []).map((item) => ({
-      label: item.label,
-      status: item.status as PipelineStatus,
+function buildPipeline(projects: Project[]): PipelineItem[] {
+  return projects
+    .slice()
+    .sort((a, b) => STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status])
+    .map((project) => ({
+      label: project.name,
+      status: project.status,
+      category: project.category,
     }));
-  } catch (error) {
-    console.error("Failed to fetch pipeline:", error);
-    return [
-      { label: "Steam Scout API", status: "Live" },
-      { label: "Junior Jobs EU", status: "Beta" },
-      { label: "Subsidy AI alerts", status: "Soon" },
-    ];
-  }
 }
+type BuildLogItem = {
+  title: string;
+  status: ProjectStatus;
+  dateLabel: string;
+  category?: string;
+};
 
-async function getBuildLog(): Promise<Array<{ title: string; date: string }>> {
-  try {
-    const { data, error } = await supabase
-      .from("build_log")
-      .select("title, date")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
-
-    if (error) {
-      console.error("Failed to fetch build log:", error);
-      return [
-        { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
-        { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
-        { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
-      ];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Failed to fetch build log:", error);
-    return [
-      { title: "Steam Scout shipped alert webhooks", date: "Jan 2026 / Release" },
-      { title: "Junior Jobs talent graph refresh", date: "Dec 2025 / Update" },
-      { title: "Subsidy AI grants ingestion", date: "Nov 2025 / Research" },
-    ];
-  }
+function buildBuildLog(projects: Project[]): BuildLogItem[] {
+  return projects
+    .slice()
+    .sort((a, b) => {
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 5)
+    .map((project) => ({
+      title: project.name,
+      status: project.status,
+      category: project.category,
+      dateLabel: project.created_at ? timelineFormatter.format(new Date(project.created_at)) : "Status updated",
+    }));
 }
 
 export default async function HomePage() {
   const year = new Date().getFullYear();
   const projects = await getProjects();
   const focusAreas = getFocusAreas(projects);
-  const heroStats = await getHeroStats();
-  const pipeline = await getPipeline();
-  const buildLog = await getBuildLog();
+  const heroStats = buildHeroStats(projects);
+  const pipeline = buildPipeline(projects);
+  const buildLog = buildBuildLog(projects);
+  const broadcastProjects = projects.map((project) => ({ name: project.name, status: project.status }));
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-100">
@@ -192,17 +184,17 @@ export default async function HomePage() {
             <Sparkles className="h-4 w-4 text-indigo-300" />
             <span>Thive Lab</span>
             <span className="h-1 w-1 rounded-full bg-indigo-400" />
-            <span>Automation Studio</span>
+            <span>Project Hub</span>
           </div>
 
           <div className="grid gap-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[58px] break-words">
-                  Building automation tools for modern teams.
+                  One home for every Thive Lab project.
                 </h1>
                 <p className="max-w-2xl text-lg text-zinc-400 lg:text-xl break-words">
-                  Automated utilities and data-driven services designed to eliminate busywork. We operate as your internal tooling team, delivering solutions focused on speed, clarity, and measurable results.
+                  This hub curates all public Thive Lab builds—developer resources, user-facing tools, API playgrounds, and shared playbooks. Track releases, read docs, and jump into the products that match your workflow.
                 </p>
               </div>
 
@@ -224,17 +216,29 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              <dl className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-3">
                 {heroStats.map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-2xl border border-zinc-800/80 bg-zinc-950/70 px-5 py-4"
+                    className="group relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-zinc-950/80 via-zinc-950/20 to-zinc-900/40 px-5 py-5 shadow-[0_25px_80px_-60px_rgba(15,23,42,1)]"
                   >
-                    <dt className="text-xs uppercase tracking-[0.4em] text-zinc-500 break-words">{stat.label}</dt>
-                    <dd className="mt-3 text-2xl font-semibold text-white break-words">{stat.value}</dd>
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-purple-500/20" />
+                    </div>
+                    <div className="relative space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] uppercase tracking-[0.45em] text-zinc-500">{stat.label}</p>
+                        <span className={`h-2.5 w-2.5 rounded-full ${stat.accent}`} />
+                      </div>
+                      <p className="text-3xl font-semibold text-white">{stat.value}</p>
+                      <p className="text-xs text-zinc-500">{stat.helper}</p>
+                    </div>
                   </div>
                 ))}
-              </dl>
+              </div>
             </div>
 
             <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900/40 p-8">
@@ -256,16 +260,23 @@ export default async function HomePage() {
                 <div className="rounded-2xl border border-zinc-800/70 bg-zinc-950/60 p-6">
                   <p className="text-xs uppercase tracking-[0.45em] text-zinc-500">Currently incubating</p>
                   <ul className="mt-4 space-y-4 text-sm text-zinc-300">
-                    {pipeline.map((item) => (
+                    {pipeline.slice(0, 6).map((item) => (
                       <li key={item.label} className="flex items-center justify-between gap-4">
-                        <span className="flex-1 break-words min-w-0">{item.label}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="block break-words">{item.label}</span>
+                          {item.category && (
+                            <span className="mt-1 block text-xs uppercase tracking-[0.25em] text-zinc-500">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
                         <span className={`text-xs font-semibold shrink-0 ${PIPELINE_STATUS_STYLES[item.status]}`}>
                           {item.status}
                         </span>
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-5 text-xs text-zinc-500">Small pilots, measurable outcomes, shared playbooks.</p>
+                  <p className="mt-5 text-xs text-zinc-500">Cross-site upgrades roll out weekly—join the waitlist for previews.</p>
                 </div>
               </div>
               <div
@@ -279,10 +290,10 @@ export default async function HomePage() {
         <section id="projects" className="space-y-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
-              <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Product stack</p>
-              <h2 className="text-3xl font-semibold text-white break-words">A bento grid of active labs</h2>
+              <p className="text-sm uppercase tracking-[0.3em] text-zinc-500">Project network</p>
+              <h2 className="text-3xl font-semibold text-white break-words">Browse the Thive Lab hub</h2>
               <p className="max-w-2xl text-base text-zinc-400 break-words">
-                Each tile links to a focused utility—shipping pricing tools, hiring intelligence, finance automation, and data services that layer on your existing workflow.
+                Every tile represents a live site, micro SaaS, or shared knowledge drop. Discover launchpads for builders, lightweight tools for operators, and experiments that invite community feedback.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-zinc-500">
@@ -302,13 +313,13 @@ export default async function HomePage() {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/40 px-4 py-1.5 text-xs uppercase tracking-[0.35em] text-zinc-400">
               <Mail className="h-4 w-4 text-indigo-300" />
-              <span>Join Waitlist</span>
+              <span>Join Broadcast</span>
             </div>
-            <h3 className="text-3xl font-semibold text-white break-words">Stay in the loop.</h3>
+            <h3 className="text-3xl font-semibold text-white break-words">Stay connected to the hub.</h3>
             <p className="text-base leading-relaxed text-zinc-400 break-words">
-              Get early access to new tools, beta invites, and monthly updates on what we&apos;re building. No spam—just product news and pilot opportunities.
+              Receive drop notes across every Thive Lab property—release recaps, API updates, community calls, and opportunities to test upcoming sites.
             </p>
-            <WaitlistForm />
+            <WaitlistForm projects={broadcastProjects} />
             <div className="flex items-center gap-4 text-xs text-zinc-500">
               <span className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -322,26 +333,36 @@ export default async function HomePage() {
           </div>
 
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/30 p-6">
-            <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">Build log</p>
-            <ul className="mt-5 space-y-4 text-sm text-zinc-300">
-              {buildLog.map((note) => (
-                <li
-                  key={note.title}
-                  className="flex items-start justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0"
-                >
-                  <span className="flex-1 leading-relaxed break-words min-w-0">{note.title}</span>
-                  <span className="text-xs text-zinc-500 shrink-0 whitespace-nowrap">{note.date}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-6 text-xs text-zinc-500">Follow along via GitHub or the waitlist to join the next build cycle.</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-zinc-500">Build log</p>
+              <ul className="mt-5 space-y-4 text-sm text-zinc-300">
+                {buildLog.map((entry) => (
+                  <li
+                    key={`${entry.title}-${entry.dateLabel}`}
+                    className="flex items-start justify-between gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="leading-relaxed break-words text-white">{entry.title}</p>
+                      {entry.category && (
+                        <p className="mt-1 text-xs uppercase tracking-[0.3em] text-zinc-500">{entry.category}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-2 text-right">
+                      <span className={`text-xs font-semibold ${PIPELINE_STATUS_STYLES[entry.status]}`}>
+                        {entry.status}
+                      </span>
+                      <span className="text-xs text-zinc-500">{entry.dateLabel}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-xs text-zinc-500">Subscribe above to get emailed the moment these entries flip to Live.</p>
           </div>
         </section>
       </div>
 
       <footer className="border-t border-zinc-900/60 bg-zinc-950/90">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <p>© {year} Thive Lab. Built for global teams.</p>
+          <p>© {year} Thive Lab. Built as the hub for devs and users.</p>
           <div className="flex flex-wrap items-center gap-6 text-zinc-400">
             <Link href="/privacy" className="hover:text-indigo-300">
               Privacy
