@@ -1,0 +1,4 @@
+# Python dependencies for Steam ETL Pipeline
+requests>=2.31.0
+supabase>=2.3.0
+python-dotenv>=1.0.0

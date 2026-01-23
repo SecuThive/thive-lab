@@ -89,6 +89,47 @@ export type Database = {
           updated_at?: string;
         };
       };
+      steam_deals: {
+        Row: {
+          id: number;
+          app_id: string;
+          name: string;
+          discount_percent: number;
+          original_price: number;
+          final_price: number;
+          steam_deck_compatible: boolean;
+          metacritic_score: number | null;
+          header_image: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          app_id: string;
+          name: string;
+          discount_percent: number;
+          original_price: number;
+          final_price: number;
+          steam_deck_compatible?: boolean;
+          metacritic_score?: number | null;
+          header_image?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          app_id?: string;
+          name?: string;
+          discount_percent?: number;
+          original_price?: number;
+          final_price?: number;
+          steam_deck_compatible?: boolean;
+          metacritic_score?: number | null;
+          header_image?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };
