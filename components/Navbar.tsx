@@ -7,6 +7,30 @@ import { Code2 } from "lucide-react";
 export default function Navbar() {
   const pathname = usePathname();
 
+  const navLinks = [
+    {
+      label: "Projects",
+      href: "/#projects",
+      isActive: pathname === "/",
+    },
+    {
+      label: "Blueprints",
+      href: "/blueprints",
+      isActive: pathname?.startsWith("/blueprints"),
+    },
+    {
+      label: "Dev Lab",
+      href: "/dev",
+      isActive: pathname?.startsWith("/dev"),
+    },
+    {
+      label: "Developers",
+      href: "/docs",
+      isActive: pathname?.startsWith("/docs"),
+      icon: Code2,
+    },
+  ] as const;
+
   return (
     <nav className="sticky top-0 z-50 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-lg">
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
@@ -20,28 +44,23 @@ export default function Navbar() {
           </Link>
 
           {/* Navigation Links */}
-          <div className="flex items-center gap-8">
-            <Link
-              href="/#projects"
-              className={`text-sm font-medium transition-colors ${
-                pathname === "/" 
-                  ? "text-white" 
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              Projects
-            </Link>
-            <Link
-              href="/docs"
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                pathname?.startsWith("/docs") 
-                  ? "text-indigo-400" 
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <Code2 className="h-4 w-4" />
-              Developers
-            </Link>
+          <div className="flex items-center gap-6">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const activeClasses = link.isActive
+                ? "text-white"
+                : "text-zinc-400 hover:text-white";
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${activeClasses}`}
+                >
+                  {Icon && <Icon className="h-4 w-4" />}
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>
