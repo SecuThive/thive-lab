@@ -4,10 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Code2 } from "lucide-react";
 
+type NavLink = {
+  label: string;
+  href: string;
+  isActive: boolean;
+  icon?: typeof Code2;
+};
+
 export default function Navbar() {
   const pathname = usePathname();
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     {
       label: "Projects",
       href: "/#projects",
