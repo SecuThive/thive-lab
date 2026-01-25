@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Code, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { CodeSnippet } from "@/components/CodeSnippet";
 
@@ -125,9 +125,87 @@ print(f"Synced {len(filtered)} deck-friendly drops @ {datetime.utcnow().isoforma
 
 export default function DevPage() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const columns = useMemo(() => {
+    const left: Array<{ script: Script; index: number }> = [];
+    const right: Array<{ script: Script; index: number }> = [];
+
+    scripts.forEach((script, index) => {
+      if (index % 2 === 0) {
+        left.push({ script, index });
+      } else {
+        right.push({ script, index });
+      }
+    });
+
+    return [left, right];
+  }, []);
 
   const toggleCard = (index: number) => {
     setExpandedIndex((current) => (current === index ? null : index));
+  };
+
+  const renderCard = (script: Script, index: number) => {
+    const isExpanded = expandedIndex === index;
+
+    return (
+      <article className="flex flex-col rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 shadow-2xl shadow-black/40">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-white">{script.title}</h2>
+            <p className="mt-3 text-sm text-zinc-400">{script.description}</p>
+          </div>
+          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-300">
+            <Code className="h-5 w-5" />
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {script.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-zinc-800 bg-zinc-950/60 px-3 py-1 text-xs font-semibold text-zinc-400"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-300">
+            Recommended Environment
+          </p>
+          <a
+            href={script.affiliate.url}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+          >
+            {script.affiliate.name}
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => toggleCard(index)}
+          className="mt-6 inline-flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-emerald-500/40"
+        >
+          <span>{isExpanded ? "Hide Code" : "View Code"}</span>
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+
+        <div
+          className="mt-6 overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out"
+          style={{ maxHeight: isExpanded ? 900 : 0, opacity: isExpanded ? 1 : 0 }}
+        >
+          {isExpanded && (
+            <div className="pt-6">
+              <CodeSnippet code={script.code} language={script.language} />
+            </div>
+          )}
+        </div>
+      </article>
+    );
   };
 
   return (
@@ -146,76 +224,20 @@ export default function DevPage() {
           </p>
         </header>
 
-        <div className="grid gap-8 md:grid-cols-2">
-          {scripts.map((script, index) => {
-            const isExpanded = expandedIndex === index;
+        <div className="space-y-8 md:hidden">
+          {scripts.map((script, index) => (
+            <div key={`mobile-${script.title}`}>{renderCard(script, index)}</div>
+          ))}
+        </div>
 
-            return (
-              <article
-                key={script.title}
-                className="flex flex-col rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6 shadow-2xl shadow-black/40"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-white">{script.title}</h2>
-                    <p className="mt-3 text-sm text-zinc-400">{script.description}</p>
-                  </div>
-                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-300">
-                    <Code className="h-5 w-5" />
-                  </span>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {script.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-zinc-800 bg-zinc-950/60 px-3 py-1 text-xs font-semibold text-zinc-400"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-300">
-                    Recommended Environment
-                  </p>
-                  <a
-                    href={script.affiliate.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300"
-                  >
-                    {script.affiliate.name}
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => toggleCard(index)}
-                  className="mt-6 inline-flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-emerald-500/40"
-                >
-                  <span>{isExpanded ? "Hide Code" : "View Code"}</span>
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </button>
-
-                <div className="mt-6 overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out"
-                  style={{ maxHeight: isExpanded ? 900 : 0, opacity: isExpanded ? 1 : 0 }}
-                >
-                  {isExpanded && (
-                    <div className="pt-6">
-                      <CodeSnippet code={script.code} language={script.language} />
-                    </div>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+        <div className="hidden gap-8 md:flex md:items-start">
+          {columns.map((column, columnIndex) => (
+            <div key={columnIndex} className="flex-1 space-y-8">
+              {column.map(({ script, index }) => (
+                <div key={script.title}>{renderCard(script, index)}</div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>
