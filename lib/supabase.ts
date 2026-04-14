@@ -130,6 +130,53 @@ export type Database = {
           updated_at?: string;
         };
       };
+      blog_posts: {
+        Row: {
+          id: number;
+          slug: string;
+          title: string;
+          summary: string | null;
+          content: string;
+          content_html: string | null;
+          tags: string[];
+          category: string | null;
+          status: 'draft' | 'published';
+          source: 'auto' | 'manual';
+          topic_key: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          slug: string;
+          title: string;
+          summary?: string | null;
+          content: string;
+          content_html?: string | null;
+          tags?: string[];
+          category?: string | null;
+          status?: 'draft' | 'published';
+          source?: 'auto' | 'manual';
+          topic_key?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          slug?: string;
+          title?: string;
+          summary?: string | null;
+          content?: string;
+          content_html?: string | null;
+          tags?: string[];
+          category?: string | null;
+          status?: 'draft' | 'published';
+          source?: 'auto' | 'manual';
+          topic_key?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       movies: {
         Row: {
           id: number;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Code2 } from "lucide-react";
+import { Code2, Rss } from "lucide-react";
 
 type NavLink = {
   label: string;
@@ -29,6 +29,12 @@ export default function Navbar() {
       label: "Dev Lab",
       href: "/dev",
       isActive: pathname?.startsWith("/dev"),
+    },
+    {
+      label: "Blog",
+      href: "/blog",
+      isActive: pathname?.startsWith("/blog"),
+      icon: Rss,
     },
     {
       label: "Developers",

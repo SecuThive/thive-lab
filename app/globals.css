@@ -16,3 +16,35 @@ body {
 ::selection {
   @apply bg-indigo-500/60 text-white;
 }
+
+/* ── 블로그 포스트 본문 스타일 ────────────────────────────── */
+.prose-blog {
+  @apply text-zinc-300 leading-relaxed;
+}
+.prose-blog h1,
+.prose-blog h2,
+.prose-blog h3,
+.prose-blog h4 {
+  @apply font-semibold text-white mt-10 mb-4;
+}
+.prose-blog h1 { @apply text-2xl; }
+.prose-blog h2 { @apply text-xl border-b border-zinc-800 pb-2; }
+.prose-blog h3 { @apply text-lg; }
+.prose-blog p  { @apply mb-5 text-zinc-300; }
+.prose-blog ul { @apply mb-5 list-disc pl-5 space-y-1.5 text-zinc-300; }
+.prose-blog ol { @apply mb-5 list-decimal pl-5 space-y-1.5 text-zinc-300; }
+.prose-blog li { @apply leading-relaxed; }
+.prose-blog strong { @apply font-semibold text-white; }
+.prose-blog em    { @apply italic text-zinc-200; }
+.prose-blog hr    { @apply border-zinc-800 my-8; }
+.prose-blog a     { @apply text-indigo-400 underline underline-offset-2 hover:text-indigo-300; }
+
+.prose-blog code {
+  @apply rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm font-mono text-indigo-300;
+}
+.prose-blog pre {
+  @apply mb-6 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/80 p-5;
+}
+.prose-blog pre code {
+  @apply bg-transparent px-0 py-0 text-sm text-zinc-200;
+}
