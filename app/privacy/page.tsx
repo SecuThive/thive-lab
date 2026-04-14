@@ -1,100 +1,218 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowLeft, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - Thive Lab",
-  description: "Privacy Policy for Thive Lab services and website.",
+  title: "개인정보처리방침 | Thive Lab",
+  description: "Thive Lab의 개인정보처리방침입니다. 수집하는 정보, 이용 목적, 보관 기간 등을 안내합니다.",
 };
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="mx-auto max-w-4xl px-6 py-16 lg:px-8">
-        <Link href="/" className="mb-8 inline-block text-sm text-indigo-400 hover:text-indigo-300">
-          ← Back to Home
+      {/* 헤더 글로우 */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 h-48 bg-gradient-to-b from-amber-500/6 via-transparent to-transparent"
+      />
+
+      <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">
+        <Link
+          href="/"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          홈으로 돌아가기
         </Link>
 
-        <article className="prose prose-invert prose-zinc max-w-none">
-          <h1 className="text-4xl font-semibold text-white">Privacy Policy</h1>
-          <p className="text-zinc-400">Last updated: January 22, 2026</p>
+        {/* 헤더 */}
+        <header className="mb-10 space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-4 py-1.5 text-xs text-zinc-400">
+            <Shield className="h-3.5 w-3.5 text-amber-400" />
+            법적 고지
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            개인정보처리방침
+          </h1>
+          <p className="text-sm text-zinc-500">최종 수정일: 2026년 4월 14일</p>
+        </header>
 
-          <section className="mt-8 space-y-6 text-zinc-300">
-            <div>
-              <h2 className="text-2xl font-semibold text-white">1. Information We Collect</h2>
-              <p className="mt-2">
-                We collect information that you provide directly to us, including when you sign up for our waitlist,
-                contact us, or use our services.
-              </p>
+        <div className="space-y-8 text-sm leading-relaxed text-zinc-300">
+
+          {/* 쿠팡 파트너스 고지 */}
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+            <p className="text-xs text-zinc-400">
+              <span className="font-semibold text-amber-400">쿠팡 파트너스 고지:</span>{" "}
+              이 사이트는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를
+              제공받을 수 있습니다. 구매자에게는 추가 비용이 발생하지 않습니다.
+            </p>
+          </div>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              1. 개인정보처리방침 개요
+            </h2>
+            <p>
+              Thive Lab(이하 "사이트")은 이용자의 개인정보를 중요하게 여기며, 「개인정보
+              보호법」 및 관련 법령을 준수합니다. 본 방침은 사이트가 수집하는 개인정보의
+              항목, 이용 목적, 보관 기간 및 이용자의 권리에 대해 안내합니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              2. 수집하는 개인정보 항목
+            </h2>
+            <p>사이트는 다음과 같은 개인정보를 수집할 수 있습니다.</p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>자동 수집 정보: IP 주소, 방문 일시, 브라우저 종류, OS 정보, 쿠키</li>
+              <li>Google Analytics를 통한 방문 통계 데이터 (익명 처리됨)</li>
+              <li>Google AdSense를 통한 광고 노출·클릭 관련 데이터</li>
+              <li>쿠팡 파트너스 링크 클릭 시 쿠팡 측에서 수집하는 구매 관련 데이터
+                (해당 정보는 쿠팡 개인정보처리방침을 따름)</li>
+            </ul>
+            <p className="mt-2 text-zinc-500 text-xs">
+              * 별도 회원가입 절차가 없으므로 이름, 이메일, 연락처 등 식별 가능한
+              개인정보는 수집하지 않습니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              3. 개인정보 수집 및 이용 목적
+            </h2>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>사이트 방문 통계 분석 및 서비스 개선</li>
+              <li>맞춤형 광고 제공(Google AdSense)</li>
+              <li>쿠팡 파트너스 수수료 정산</li>
+              <li>보안 사고 예방 및 법적 의무 이행</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              4. 개인정보 보유 및 이용 기간
+            </h2>
+            <p>
+              수집된 개인정보는 목적 달성 후 즉시 파기합니다. 단, 관련 법령에 의거하여
+              보존이 필요한 경우 해당 기간 동안 보관합니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>접속 로그 기록: 3개월 (통신비밀보호법)</li>
+              <li>소비자 불만·분쟁 처리 기록: 3년 (전자상거래법)</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              5. 쿠키(Cookie) 사용
+            </h2>
+            <p>
+              사이트는 서비스 개선 및 광고 최적화를 위해 쿠키를 사용합니다.
+              쿠키는 이용자의 컴퓨터에 저장되는 소량의 텍스트 파일입니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>Google Analytics 분석 쿠키: 사이트 이용 통계 수집</li>
+              <li>Google AdSense 광고 쿠키: 맞춤형 광고 제공</li>
+              <li>쿠팡 파트너스 추적 쿠키: 구매 연결 추적 및 수수료 정산</li>
+            </ul>
+            <p className="mt-2">
+              브라우저 설정에서 쿠키 허용 여부를 직접 설정할 수 있습니다. 쿠키를 거부하면
+              일부 서비스 이용에 제한이 있을 수 있습니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              6. 제3자 서비스 및 외부 링크
+            </h2>
+            <div className="space-y-3">
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                <p className="font-medium text-zinc-200 mb-1">Google Analytics</p>
+                <p className="text-zinc-400 text-xs">
+                  사이트 방문 분석을 위해 Google Analytics를 사용합니다.
+                  Google의 개인정보 처리에 관해서는{" "}
+                  <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer"
+                    className="text-amber-400/80 underline">Google 개인정보처리방침</a>을 참고하세요.
+                </p>
+              </div>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                <p className="font-medium text-zinc-200 mb-1">쿠팡 파트너스</p>
+                <p className="text-zinc-400 text-xs">
+                  이 사이트에는 쿠팡 파트너스 제휴 링크가 포함되어 있습니다. 링크를
+                  통해 쿠팡에서 구매 시 사이트 운영자에게 일정 수수료가 지급됩니다.
+                  구매 과정에서의 개인정보 처리는{" "}
+                  <a href="https://www.coupang.com/np/landing/privacy.html" target="_blank"
+                    rel="noopener noreferrer sponsored" className="text-amber-400/80 underline">
+                    쿠팡 개인정보처리방침
+                  </a>을 따릅니다.
+                </p>
+              </div>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+                <p className="font-medium text-zinc-200 mb-1">Google AdSense</p>
+                <p className="text-zinc-400 text-xs">
+                  광고 서비스를 위해 Google AdSense를 사용할 수 있습니다.
+                  Google은 쿠키를 사용하여 사용자의 이전 방문을 기반으로 광고를 게재합니다.
+                </p>
+              </div>
             </div>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">2. How We Use Your Information</h2>
-              <p className="mt-2">
-                We use the information we collect to operate, maintain, and improve our services, communicate with you,
-                and comply with legal obligations.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              7. 이용자의 권리
+            </h2>
+            <p>이용자는 언제든지 다음의 권리를 행사할 수 있습니다.</p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>개인정보 처리 현황 조회 및 열람 요청</li>
+              <li>개인정보 정정·삭제 요청</li>
+              <li>개인정보 처리 정지 요청</li>
+            </ul>
+            <p className="mt-2">
+              권리 행사 및 문의사항은 아래 연락처로 요청하시면 지체 없이 처리합니다.
+            </p>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">3. Information Sharing</h2>
-              <p className="mt-2">
-                We do not sell, trade, or otherwise transfer your personal information to third parties without your
-                consent, except as described in this policy or as required by law.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold text-white">4. Cookies and Tracking</h2>
-              <p className="mt-2">
-                We use cookies and similar tracking technologies to track activity on our service and hold certain
-                information. You can instruct your browser to refuse all cookies or indicate when a cookie is being sent.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold text-white">5. Third-Party Services</h2>
-              <p className="mt-2">
-                Our website may contain advertisements served by Google AdSense and other third-party advertising partners.
-                These partners may use cookies and similar technologies to collect information about your visits to this and
-                other websites to provide relevant advertisements.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold text-white">6. Data Security</h2>
-              <p className="mt-2">
-                We implement appropriate technical and organizational measures to protect your personal information.
-                However, no method of transmission over the internet is 100% secure.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold text-white">7. Your Rights</h2>
-              <p className="mt-2">
-                You have the right to access, update, or delete your personal information. Contact us at
-                thive8564@gmail.com to exercise these rights.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold text-white">8. Changes to This Policy</h2>
-              <p className="mt-2">
-                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new
-                Privacy Policy on this page and updating the &quot;Last updated&quot; date.
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold text-white">9. Contact Us</h2>
-              <p className="mt-2">
-                If you have any questions about this Privacy Policy, please contact us at:{" "}
-                <a href="mailto:thive8564@gmail.com" className="text-indigo-400 hover:text-indigo-300">
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              8. 개인정보 보호책임자
+            </h2>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-1 text-zinc-400">
+              <p><span className="text-zinc-300 font-medium">운영자:</span> Thive Lab</p>
+              <p>
+                <span className="text-zinc-300 font-medium">이메일:</span>{" "}
+                <a href="mailto:thive8564@gmail.com" className="text-amber-400 hover:text-amber-300">
                   thive8564@gmail.com
                 </a>
               </p>
+              <p className="text-xs text-zinc-600 mt-2">
+                개인정보 침해에 관한 신고·상담은 개인정보보호위원회(privacy.go.kr) 또는
+                한국인터넷진흥원(118)에 문의하실 수 있습니다.
+              </p>
             </div>
           </section>
-        </article>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              9. 방침 변경 안내
+            </h2>
+            <p>
+              본 개인정보처리방침은 법령·정책 변경 또는 서비스 개선에 따라 수정될 수
+              있습니다. 변경 시 사이트 내 공지를 통해 안내드립니다.
+            </p>
+          </section>
+
+        </div>
+
+        <div className="mt-12">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            홈으로 돌아가기
+          </Link>
+        </div>
       </div>
     </div>
   );

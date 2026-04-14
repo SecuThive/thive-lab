@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 """
-ThiveLab Auto Blog Generator — Multi-Stage Pipeline v2
+ThiveLab 쿠팡 파트너스 리뷰 자동 생성기 — v3.0
 
-Stage 1 · topic    : 토픽 선정 + 독자·각도 분석
-Stage 2 · outline  : 섹션별 상세 아웃라인 생성
-Stage 3 · write    : 아웃라인 기반 본문 작성
-Stage 4 · quality  : 가독성·깊이·정확성 검토 + 품질 스코어 (0-100)
-Stage 5 · seo      : 제목 / 메타 / 슬러그 / 키워드 최적화
+사이트 카테고리: 가전/IT · 생활용품 · 주방 · 뷰티/헬스 · 스포츠 · 아이디어 · 유아/교육 · 식품
+
+Pipeline:
+  Stage 1 · topic    : 리뷰 대상 상품 선정 + 타깃 독자 분석
+  Stage 2 · outline  : 섹션별 리뷰 구조 설계
+  Stage 3 · write    : 리뷰 본문 작성 (실사용 관점)
+  Stage 4 · quality  : 품질 검토 + 스코어링 (0-100)
+  Stage 5 · seo      : 제목/메타/슬러그/태그 SEO 최적화
 
 Usage:
-    python blog_generator.py              # 1개 생성 (전체 파이프라인)
+    python blog_generator.py              # 1개 생성
     python blog_generator.py --count 3    # 3개 생성
     python blog_generator.py --dry-run    # 저장 없이 출력만
-    python blog_generator.py --stage seo  # 특정 스테이지부터 재실행 (캐시 활용)
-    python blog_generator.py --pipeline-mode  # 구조화된 마커 출력 (blog_queue 사용)
+    python blog_generator.py --pipeline-mode  # 구조화 마커 출력
+    python blog_generator.py --category 가전/IT  # 특정 카테고리만
 """
 
 from __future__ import annotations
@@ -49,65 +52,97 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ── 파이프라인 모드 플래그 (blog_queue 워커가 활성화) ──────────
+# ── 파이프라인 모드 플래그 ─────────────────────────────────────
 _PIPELINE_MODE = False
 
 def _emit(marker: str) -> None:
-    """파이프라인 마커 출력 (pipeline-mode일 때만)"""
     if _PIPELINE_MODE:
         print(marker, flush=True)
 
 # ── 모델 품질 우선순위 ─────────────────────────────────────────
 MODEL_PRIORITY = [
-    "llama3.3", "llama3.2", "llama3.1", "llama3",
-    "deepseek-r1", "deepseek-v3",
-    "qwen2.5:72b", "qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b", "qwen2.5",
-    "mistral-large", "mistral-nemo", "mistral",
-    "gemma3:27b", "gemma3:12b", "gemma3:4b", "gemma3",
+    "llama3.3", "llama3.2", "llama3.1",
+    "deepseek-r1",
+    "qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b", "qwen2.5",
+    "qwen2.5-coder:32b",
+    "gemma3:27b", "gemma3:12b", "gemma3",
     "gemma4:27b", "gemma4:12b", "gemma4:e4b", "gemma4",
+    "mistral-large", "mistral",
     "phi4", "phi3",
-    "solar", "command-r-plus", "command-r",
 ]
 
 STATE_FILE   = Path(__file__).parent / ".pipeline_state.json"
 HISTORY_FILE = Path(__file__).parent / ".blog_history.json"
-HISTORY_KEEP = 15
-
-# ── 최소 품질 점수 (이 미만이면 write 스테이지 재시도) ──────────
+HISTORY_KEEP = 30
 MIN_QUALITY_SCORE = 65
 MAX_WRITE_RETRY   = 2
 
-# ── 토픽 목록 ─────────────────────────────────────────────────
+# ── 사이트 카테고리 (UI와 동일하게 유지) ──────────────────────
+SITE_CATEGORIES = ["가전/IT", "생활용품", "주방", "뷰티/헬스", "스포츠", "아이디어", "유아/교육", "식품"]
+
+# ── 리뷰 토픽 목록 (카테고리별) ─────────────────────────────────
 TOPICS = [
-    # AI / LLM
-    {"key": "llm_prompt_engineering",  "title": "LLM 프롬프트 엔지니어링 실전 가이드",              "category": "AI"},
-    {"key": "ai_agent_tools",          "title": "2025년 AI 에이전트 도구 비교: LangChain vs CrewAI", "category": "AI"},
-    {"key": "rag_pipeline",            "title": "RAG 파이프라인 구축 완전 정복",                     "category": "AI"},
-    {"key": "llm_finetuning_intro",    "title": "비용 없이 LLM 파인튜닝하는 법 (LoRA 활용)",        "category": "AI"},
-    {"key": "local_llm_ollama",        "title": "Ollama로 로컬 LLM 서버 세팅하기",                  "category": "AI"},
-    # 인디해커 / 마이크로 SaaS
-    {"key": "indie_mrr_100",           "title": "MRR $100 달성하는 마이크로 SaaS 전략",             "category": "Indie"},
-    {"key": "supabase_mvp",            "title": "Supabase로 MVP 24시간 안에 만들기",                 "category": "Indie"},
-    {"key": "nextjs_saas_boilerplate", "title": "Next.js SaaS 보일러플레이트 완전 해부",             "category": "Dev"},
-    {"key": "stripe_subscription",     "title": "Stripe 구독 결제 연동 실전 노트",                   "category": "Dev"},
-    {"key": "vercel_edge_functions",   "title": "Vercel Edge Functions 활용 패턴 모음",              "category": "Dev"},
-    # 자동화
-    {"key": "python_automation_2025",  "title": "파이썬으로 반복 업무 자동화하는 7가지 방법",        "category": "Automation"},
-    {"key": "github_actions_ci",       "title": "GitHub Actions로 CI/CD 파이프라인 5분 설정",        "category": "DevOps"},
-    {"key": "cron_job_patterns",       "title": "서버리스 크론 잡 설계 패턴 (Vercel Cron 포함)",     "category": "DevOps"},
-    {"key": "playwright_scraping",     "title": "Playwright 기반 스크레이핑 완전 가이드",             "category": "Automation"},
-    # 개발자 성장
-    {"key": "open_source_contrib",     "title": "오픈소스 기여로 포트폴리오 만드는 법",              "category": "Growth"},
-    {"key": "side_project_launch",     "title": "사이드 프로젝트 론칭 체크리스트 25가지",            "category": "Growth"},
-    {"key": "technical_writing",       "title": "기술 블로그 잘 쓰는 개발자들의 공통점",             "category": "Growth"},
-    # 보안
-    {"key": "supabase_rls",            "title": "Supabase RLS 정책 완전 정복",                       "category": "Security"},
-    {"key": "api_security_basics",     "title": "REST API 보안 기초: 개발자가 꼭 알아야 할 것들",    "category": "Security"},
-    {"key": "jwt_auth_patterns",       "title": "JWT 인증 구현 패턴과 흔한 실수",                    "category": "Security"},
-    # 데이터 / ETL
-    {"key": "supabase_realtime",       "title": "Supabase Realtime으로 실시간 대시보드 만들기",      "category": "Data"},
-    {"key": "steam_data_api",          "title": "Steam Web API 데이터 수집과 분석",                  "category": "Data"},
-    {"key": "etl_python_patterns",     "title": "파이썬 ETL 파이프라인 설계 패턴",                   "category": "Data"},
+    # 가전/IT
+    {"key": "airfryer_review",          "title": "에어프라이어 추천 TOP 5 — 직접 써본 솔직 리뷰",        "category": "가전/IT"},
+    {"key": "robot_vacuum_compare",     "title": "로봇청소기 비교 2026 — 샤오미 vs 삼성 vs 에코백스",   "category": "가전/IT"},
+    {"key": "wireless_earbuds",         "title": "무선 이어폰 가성비 추천 — 2만원대부터 10만원대까지",   "category": "가전/IT"},
+    {"key": "portable_charger",         "title": "보조배터리 추천 — 용량별 최고 가성비 정리",            "category": "가전/IT"},
+    {"key": "smart_tv_review",          "title": "저렴한 스마트 TV 추천 — 40인치대 비교 리뷰",           "category": "가전/IT"},
+    {"key": "air_purifier",             "title": "공기청정기 추천 — 평수별 최적 모델 가이드",             "category": "가전/IT"},
+    {"key": "mechanical_keyboard",      "title": "기계식 키보드 추천 — 입문자부터 고수까지",              "category": "가전/IT"},
+    {"key": "webcam_review",            "title": "웹캠 추천 — 재택근무·스트리밍 용도별 비교",             "category": "가전/IT"},
+
+    # 생활용품
+    {"key": "vacuum_cleaner",           "title": "청소기 추천 — 무선 vs 유선, 상황별 최적 선택",         "category": "생활용품"},
+    {"key": "humidifier_review",        "title": "가습기 추천 2026 — 초음파 vs 가열식 완전 비교",        "category": "생활용품"},
+    {"key": "laundry_detergent",        "title": "세탁 세제 추천 — 피부 자극 없는 인기 제품 모음",        "category": "생활용품"},
+    {"key": "mattress_topper",          "title": "매트리스 토퍼 추천 — 수면 질 개선 실제 효과는?",       "category": "생활용품"},
+    {"key": "storage_rack",             "title": "수납 선반 추천 — 좁은 집 공간 활용 아이디어",           "category": "생활용품"},
+    {"key": "bathroom_accessories",     "title": "욕실 수납 추천 — 칫솔걸이부터 수납함까지 정리",        "category": "생활용품"},
+
+    # 주방
+    {"key": "rice_cooker_review",       "title": "전기밥솥 추천 — 1인부터 4인 가족까지 용량별 정리",     "category": "주방"},
+    {"key": "blender_review",           "title": "믹서기 추천 — 스무디·이유식·주스 용도별 비교",          "category": "주방"},
+    {"key": "coffee_maker",             "title": "가정용 커피머신 추천 — 10만원대 가성비 TOP 5",         "category": "주방"},
+    {"key": "induction_cooktop",        "title": "인덕션 추천 — 1구부터 2구까지 가정용 비교 리뷰",        "category": "주방"},
+    {"key": "food_container",           "title": "밀폐 용기 추천 — 냉장·냉동 보관 최강 제품들",           "category": "주방"},
+    {"key": "cutting_board",            "title": "도마 추천 — 항균·위생 강한 인기 제품 정리",             "category": "주방"},
+
+    # 뷰티/헬스
+    {"key": "sunscreen_review",         "title": "선크림 추천 — SPF 높고 백탁 없는 제품 TOP 7",         "category": "뷰티/헬스"},
+    {"key": "facial_massager",          "title": "얼굴 마사지기 추천 — 피부 탄력 개선 실제 후기",         "category": "뷰티/헬스"},
+    {"key": "electric_toothbrush",      "title": "전동칫솔 추천 — 구강 관리 효과 높은 모델 비교",         "category": "뷰티/헬스"},
+    {"key": "hair_dryer",               "title": "헤어드라이어 추천 — 데이슨 대신 가성비 대안은?",        "category": "뷰티/헬스"},
+    {"key": "blood_pressure_monitor",   "title": "혈압계 추천 — 가정용 정확도 높은 제품 비교",            "category": "뷰티/헬스"},
+    {"key": "massage_gun",              "title": "마사지건 추천 — 근막 이완 효과 실제 테스트 결과",        "category": "뷰티/헬스"},
+
+    # 스포츠
+    {"key": "yoga_mat_review",          "title": "요가 매트 추천 — 두께·소재·미끄럼 방지 완전 비교",      "category": "스포츠"},
+    {"key": "running_shoes",            "title": "러닝화 추천 — 발볼 넓은 분을 위한 가성비 모델",         "category": "스포츠"},
+    {"key": "dumbbell_set",             "title": "덤벨 세트 추천 — 홈 트레이닝 입문자 가이드",            "category": "스포츠"},
+    {"key": "fitness_band",             "title": "스마트밴드 추천 — 건강 관리 기능 비교 2026",           "category": "스포츠"},
+    {"key": "foam_roller",              "title": "폼롤러 추천 — 운동 후 피로 회복 효과 비교",             "category": "스포츠"},
+
+    # 아이디어
+    {"key": "desk_organizer",           "title": "책상 정리함 추천 — 집중력 올려주는 데스크셋업",          "category": "아이디어"},
+    {"key": "portable_fan",             "title": "휴대용 선풍기 추천 — 여름 필수템 가성비 TOP 5",        "category": "아이디어"},
+    {"key": "led_lamp",                 "title": "LED 스탠드 추천 — 눈 피로 줄이는 조명 비교",           "category": "아이디어"},
+    {"key": "cable_organizer",          "title": "케이블 정리 추천 — 선 정리 한 번에 해결하는 제품들",    "category": "아이디어"},
+    {"key": "smart_plug",               "title": "스마트 플러그 추천 — 전기 절약하고 편리하게",           "category": "아이디어"},
+
+    # 유아/교육
+    {"key": "baby_carrier",             "title": "아기 띠 추천 — 신생아부터 36개월 사용 가능한 모델",     "category": "유아/교육"},
+    {"key": "kids_tablet",              "title": "어린이 태블릿 추천 — 교육용 콘텐츠 강한 제품 비교",     "category": "유아/교육"},
+    {"key": "baby_monitor",             "title": "베이비 모니터 추천 — 야간 촬영·울음 감지 기능 비교",    "category": "유아/교육"},
+    {"key": "kids_bike",                "title": "어린이 자전거 추천 — 연령별 사이즈 선택 완전 가이드",    "category": "유아/교육"},
+    {"key": "educational_toys",         "title": "유아 교육 장난감 추천 — 두뇌 발달에 좋은 제품 모음",    "category": "유아/교육"},
+
+    # 식품
+    {"key": "protein_powder",           "title": "단백질 보충제 추천 — 맛·성분 모두 잡은 가성비 TOP 5", "category": "식품"},
+    {"key": "healthy_snacks",           "title": "건강 간식 추천 — 다이어트 중에도 먹을 수 있는 것들",   "category": "식품"},
+    {"key": "korean_tea",               "title": "건강 차 추천 — 피로 회복과 면역력에 좋은 제품들",      "category": "식품"},
+    {"key": "cooking_oil",              "title": "식용유 추천 — 올리브유·코코넛오일·아보카도유 비교",     "category": "식품"},
+    {"key": "meal_kit",                 "title": "밀키트 추천 — 맛있고 간편한 제품 순위 2026",          "category": "식품"},
 ]
 
 
@@ -130,9 +165,12 @@ def _save_history(key: str) -> None:
     except Exception:
         pass
 
-def pick_topic() -> dict:
+def pick_topic(category_filter: Optional[str] = None) -> dict:
     recent = set(_load_history())
-    pool = [t for t in TOPICS if t["key"] not in recent] or TOPICS
+    pool = TOPICS
+    if category_filter and category_filter in SITE_CATEGORIES:
+        pool = [t for t in TOPICS if t["category"] == category_filter]
+    pool = [t for t in pool if t["key"] not in recent] or (pool or TOPICS)
     return random.choice(pool)
 
 def slugify(text: str) -> str:
@@ -156,20 +194,26 @@ def unique_slug(base_slug: str) -> str:
         suffix += 1
 
 def md_to_html(md: str) -> str:
+    """마크다운 → prose-blog 클래스 호환 HTML 변환"""
     html = md
+    # 코드 블록
     html = re.sub(
         r"```(\w*)\n([\s\S]*?)```",
         lambda m: f'<pre><code class="language-{m.group(1)}">{m.group(2).rstrip()}</code></pre>',
         html,
     )
     html = re.sub(r"`([^`]+)`", r"<code>\1</code>", html)
+    # 헤딩
     for n in range(4, 0, -1):
         html = re.sub(r"^" + "#" * n + r" (.+)$", rf"<h{n}>\1</h{n}>", html, flags=re.MULTILINE)
+    # 강조
     html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
     html = re.sub(r"\*(.+?)\*",     r"<em>\1</em>",         html)
+    # 리스트
     html = re.sub(r"^[-*] (.+)$",  r"<li>\1</li>",         html, flags=re.MULTILINE)
     html = re.sub(r"(<li>.*</li>)", r"<ul>\1</ul>",         html, flags=re.DOTALL)
     html = re.sub(r"^---+$",        "<hr>",                  html, flags=re.MULTILINE)
+    # 단락
     paragraphs = re.split(r"\n{2,}", html.strip())
     parts = []
     for p in paragraphs:
@@ -230,7 +274,9 @@ def _chat(model: str, system: str, user: str, temperature: float = 0.7, timeout:
         timeout=timeout,
     )
     resp.raise_for_status()
-    return resp.json()["message"]["content"].strip()
+    raw = resp.json()["message"]["content"].strip()
+    # deepseek-r1 등 추론 모델의 <think> 블록 제거
+    return re.sub(r"<think>[\s\S]*?</think>", "", raw, flags=re.IGNORECASE).strip()
 
 
 # ══════════════════════════════════════════════════════════════
@@ -248,7 +294,7 @@ def load_state() -> dict:
 
 
 # ══════════════════════════════════════════════════════════════
-# Stage 헬퍼 — 진행 마커 출력
+# Stage 헬퍼
 # ══════════════════════════════════════════════════════════════
 
 def _stage_start(name: str) -> float:
@@ -273,54 +319,60 @@ def _stage_fail(name: str, reason: str) -> None:
 
 def stage_topic(topic: dict, model: str) -> dict:
     t0 = _stage_start("topic")
-    log.info("  토픽: %s", topic["title"])
+    log.info("  토픽: %s [%s]", topic["title"], topic["category"])
     system = (
-        "당신은 한국 개발자 커뮤니티 트렌드에 정통한 콘텐츠 전략가입니다. "
-        "주어진 주제를 분석해 최적의 글쓰기 각도와 독자층을 JSON으로 제안합니다."
+        "당신은 한국 쇼핑 트렌드와 소비자 심리에 정통한 콘텐츠 전략가입니다. "
+        "주어진 상품 카테고리를 분석해 구매 전환율 높은 리뷰 전략을 JSON으로 제안합니다."
     )
-    user = f"""주제: {topic['title']}
+    user = f"""리뷰 주제: {topic['title']}
 카테고리: {topic['category']}
 
 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
 {{
-  "angle": "이 글의 핵심 접근 각도",
-  "target_audience": "주요 독자층",
-  "pain_point": "독자가 겪는 핵심 고통/궁금증 1문장",
-  "unique_hook": "다른 글과 차별화되는 이 글만의 특징 1문장",
-  "tone": "글의 톤앤매너"
+  "angle": "이 리뷰의 핵심 차별화 포인트",
+  "target_buyer": "주요 구매 타깃 (예: 1인 가구 30대, 육아 중인 부모 등)",
+  "purchase_pain": "구매 전 가장 많이 고민하는 것 1문장",
+  "review_focus": "이 리뷰에서 가장 강조할 평가 기준 3가지 (쉼표 구분)",
+  "tone": "글의 톤 (예: 친근한 이웃, 전문 바이어, 솔직한 사용자)"
 }}"""
     raw = _chat(model, system, user, temperature=0.5)
     try:
         m = re.search(r"\{[\s\S]+\}", raw)
         analysis = json.loads(m.group()) if m else {}
     except Exception:
-        analysis = {"angle": "실전 가이드", "target_audience": "개발자", "pain_point": "", "unique_hook": "", "tone": "친근한"}
-    log.info("  각도: %s | 독자: %s", analysis.get("angle", "-"), analysis.get("target_audience", "-"))
+        analysis = {
+            "angle": "가성비 중심 실사용 리뷰",
+            "target_buyer": "일반 소비자",
+            "purchase_pain": "어떤 제품을 골라야 할지 모르겠다",
+            "review_focus": "가격, 품질, 내구성",
+            "tone": "솔직한 사용자",
+        }
+    log.info("  각도: %s | 타깃: %s", analysis.get("angle", "-"), analysis.get("target_buyer", "-"))
     _stage_done("topic", t0)
     return analysis
 
 
 # ══════════════════════════════════════════════════════════════
-# Stage 2 · 아웃라인 생성
+# Stage 2 · 리뷰 구조 아웃라인
 # ══════════════════════════════════════════════════════════════
 
 def stage_outline(topic: dict, analysis: dict, model: str) -> str:
     t0 = _stage_start("outline")
     system = (
-        "당신은 한국어 기술 블로그 전문 에디터입니다. "
-        "독자의 이탈을 막는 논리적 구조의 아웃라인을 작성합니다."
+        "당신은 한국 쇼핑 리뷰 전문 에디터입니다. "
+        "독자가 끝까지 읽고 구매 버튼을 누르도록 유도하는 리뷰 구조를 설계합니다."
     )
-    user = f"""주제: {topic['title']}
-각도: {analysis.get('angle', '')}
-독자: {analysis.get('target_audience', '')}
-고통점: {analysis.get('pain_point', '')}
-차별점: {analysis.get('unique_hook', '')}
+    user = f"""리뷰 주제: {topic['title']}
+카테고리: {topic['category']}
+타깃 구매자: {analysis.get('target_buyer', '')}
+구매 고민: {analysis.get('purchase_pain', '')}
+평가 기준: {analysis.get('review_focus', '')}
 
-아래 규칙으로 아웃라인을 작성하세요:
-- H2 섹션 4~5개
-- 각 섹션에 불릿 3~4개 (구체적 내용 힌트)
-- 코드 예시가 들어갈 섹션 1~2개 명시 [코드 포함]
-- 마지막 섹션은 핵심 정리/액션 아이템"""
+아래 규칙으로 리뷰 아웃라인을 작성하세요:
+- H2 섹션 4~5개 (예: 제품 개요, 주요 특징, 사용 후기, 가격 비교, 총평)
+- 각 섹션에 구체적 내용 힌트 불릿 3개
+- 마지막 섹션은 반드시 "구매 추천 대상 / 비추천 대상" 포함
+- 가격대 정보 섹션 1개 포함 (예: X만원대 제품들 비교)"""
     outline = _chat(model, system, user, temperature=0.6)
     sections = outline.count("## ")
     log.info("  섹션 수: %d", sections)
@@ -329,7 +381,7 @@ def stage_outline(topic: dict, analysis: dict, model: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════
-# Stage 3 · 본문 작성
+# Stage 3 · 리뷰 본문 작성
 # ══════════════════════════════════════════════════════════════
 
 def stage_write(topic: dict, analysis: dict, outline: str, model: str, attempt: int = 1) -> str:
@@ -337,22 +389,24 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str, attempt: 
     if attempt > 1:
         log.info("  재시도 %d/%d", attempt, MAX_WRITE_RETRY + 1)
     system = (
-        f"당신은 {analysis.get('tone', '친근한 선배 개발자')} 스타일의 한국 테크 블로거입니다. "
-        "아웃라인을 바탕으로 실제 코드와 구체적 수치가 담긴 완성도 높은 글을 마크다운으로 작성합니다. "
-        "서론 없이 첫 문장부터 핵심을 말합니다."
+        f"당신은 {analysis.get('tone', '솔직한 사용자')} 스타일의 한국 쇼핑 리뷰어입니다. "
+        "직접 구매하고 사용한 것처럼 생생하고 구체적인 리뷰를 마크다운으로 작성합니다. "
+        "광고처럼 들리지 않고, 단점도 솔직하게 언급합니다."
     )
-    user = f"""주제: {topic['title']}
-독자: {analysis.get('target_audience', '')}
-차별점: {analysis.get('unique_hook', '')}
+    user = f"""리뷰 주제: {topic['title']}
+카테고리: {topic['category']}
+타깃 구매자: {analysis.get('target_buyer', '')}
+평가 포인트: {analysis.get('review_focus', '')}
 
 아웃라인:
 {outline}
 
 작성 규칙:
-- 총 700~1000 단어
-- 각 섹션은 아웃라인의 힌트를 모두 반영
-- [코드 포함] 섹션에는 반드시 실제 동작하는 코드 블록 포함
-- 추상적 표현 금지 — 구체적 예시, 수치, 도구명 사용
+- 총 600~900 단어
+- 첫 문단에서 이 리뷰를 읽어야 하는 이유를 바로 말할 것
+- 구체적 수치 포함 (가격대, 용량, 무게, 배터리 시간 등)
+- 장점 3개 이상, 단점 1~2개 반드시 포함 (솔직성 유지)
+- 추천 대상 / 비추천 대상 명확히 구분
 - 마지막 줄: tags: 태그1, 태그2, 태그3, 태그4, 태그5"""
     draft = _chat(model, system, user, temperature=0.75 + (attempt - 1) * 0.05, timeout=400)
     word_count = len(draft.split())
@@ -366,22 +420,21 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str, attempt: 
 # ══════════════════════════════════════════════════════════════
 
 def stage_quality(draft: str, analysis: dict, model: str) -> tuple[str, int]:
-    """개선된 본문과 품질 스코어 (0-100) 반환"""
     t0 = _stage_start("quality")
     system = (
-        "당신은 기술 블로그 전문 에디터입니다. "
-        "초고를 검토하고 품질을 높여 최종본과 점수를 반환합니다."
+        "당신은 쇼핑 리뷰 전문 에디터입니다. "
+        "초고를 검토하고 구매 전환율을 높이는 방향으로 개선 후 점수를 반환합니다."
     )
-    user = f"""독자: {analysis.get('target_audience', '개발자')}
+    user = f"""타깃 구매자: {analysis.get('target_buyer', '일반 소비자')}
 
-아래 기준으로 초고를 검토하고 개선된 최종본을 작성한 뒤, JSON 형식으로 반환하세요.
+아래 기준으로 초고를 검토하고 개선된 최종본을 작성한 뒤 JSON으로 반환하세요.
 
 검토 기준 (각 20점):
-1. 첫 문장이 즉시 핵심을 전달하는가?
-2. 섹션 간 논리적 연결이 자연스러운가?
-3. 코드 예시가 실제 동작 가능한 수준인가?
-4. 추상적·진부한 표현이 없는가?
-5. 가독성 (문장 길이, 단락 구분)이 적절한가?
+1. 첫 문단이 독자를 즉시 붙잡는가?
+2. 구체적 수치/스펙이 충분히 포함되었는가?
+3. 장단점이 균형 있게 서술되었는가?
+4. 추천 대상이 명확하게 안내되었는가?
+5. 가독성 (단락 구분, 문장 길이)이 적절한가?
 
 JSON 형식:
 {{
@@ -395,7 +448,6 @@ JSON 형식:
 ---"""
     raw = _chat(model, system, user, temperature=0.4, timeout=400)
 
-    # JSON 파싱 시도
     score = 70
     improved = draft
     try:
@@ -405,7 +457,6 @@ JSON 형식:
             score = int(data.get("score", 70))
             improved = data.get("improved_content") or draft
     except Exception:
-        # JSON 파싱 실패 시 raw 전체를 개선본으로 처리
         improved = raw if len(raw) > 200 else draft
 
     score = max(0, min(100, score))
@@ -422,23 +473,23 @@ def stage_seo(topic: dict, content: str, analysis: dict, model: str) -> dict:
     t0 = _stage_start("seo")
     system = (
         "당신은 한국어 SEO 전문가입니다. "
-        "검색 트래픽을 극대화하는 메타데이터를 JSON으로 생성합니다."
+        "쇼핑 관련 검색 쿼리에 최적화된 메타데이터를 JSON으로 생성합니다."
     )
     user = f"""원본 제목: {topic['title']}
 카테고리: {topic['category']}
-독자: {analysis.get('target_audience', '')}
+타깃 구매자: {analysis.get('target_buyer', '')}
 
-본문 (앞 500자):
+본문 앞부분:
 {content[:500]}
 
 아래 JSON 형식으로만 응답하세요:
 {{
-  "seo_title": "검색 노출용 최적화 제목 (40~60자, 핵심 키워드 포함)",
-  "meta_description": "검색 결과 설명 (80~120자, 클릭을 유도하는 문장)",
-  "focus_keyword": "이 글의 대표 검색 키워드 1개",
+  "seo_title": "검색 최적화 제목 (40~60자, '추천'·'비교'·'후기' 등 키워드 포함)",
+  "meta_description": "검색 결과 설명 (80~120자, 구매 유도 문구 포함)",
+  "focus_keyword": "대표 검색 키워드 1개 (예: 에어프라이어 추천)",
   "secondary_keywords": ["연관 키워드1", "연관 키워드2", "연관 키워드3"],
   "tags": ["태그1", "태그2", "태그3", "태그4", "태그5"],
-  "slug_suggestion": "영문-소문자-하이픈-형식"
+  "slug_suggestion": "영문-소문자-하이픈 (예: airfryer-review-2026)"
 }}"""
     raw = _chat(model, system, user, temperature=0.3)
     seo: dict = {}
@@ -449,7 +500,7 @@ def stage_seo(topic: dict, content: str, analysis: dict, model: str) -> dict:
     except Exception:
         pass
 
-    # content tags 줄 백업
+    # content의 tags 줄 백업
     tag_match = re.search(r"tags?:\s*(.+)$", content, re.IGNORECASE | re.MULTILINE)
     if tag_match and not seo.get("tags"):
         seo["tags"] = [t.strip() for t in tag_match.group(1).split(",") if t.strip()]
@@ -476,22 +527,22 @@ def assemble(topic: dict, content: str, seo: dict) -> dict:
         "content_html":  md_to_html(clean),
         "tags":          seo.get("tags", []),
         "focus_keyword": seo.get("focus_keyword", ""),
-        "category":      topic["category"],
+        "category":      topic["category"],  # 사이트 카테고리와 동일
     }
 
 def save_to_supabase(topic: dict, assembled: dict, slug: str, quality_score: int) -> None:
     record = {
-        "slug":          slug,
-        "title":         assembled["title"],
-        "summary":       assembled["summary"],
-        "content":       assembled["content"],
-        "content_html":  assembled["content_html"],
-        "tags":          assembled["tags"],
-        "category":      assembled["category"],
-        "status":        "published",
-        "source":        "auto",
-        "topic_key":     topic["key"],
-        "created_at":    datetime.utcnow().isoformat(),
+        "slug":         slug,
+        "title":        assembled["title"],
+        "summary":      assembled["summary"],
+        "content":      assembled["content"],
+        "content_html": assembled["content_html"],
+        "tags":         assembled["tags"],
+        "category":     assembled["category"],
+        "status":       "published",
+        "source":       "auto",
+        "topic_key":    topic["key"],
+        "created_at":   datetime.utcnow().isoformat(),
     }
     resp = requests.post(
         f"{SUPABASE_URL}/rest/v1/blog_posts",
@@ -505,7 +556,7 @@ def save_to_supabase(topic: dict, assembled: dict, slug: str, quality_score: int
         timeout=15,
     )
     resp.raise_for_status()
-    log.info("[DB] 저장 완료: /blog/%s (score=%d)", slug, quality_score)
+    log.info("[DB] 저장 완료: /blog/%s (score=%d, category=%s)", slug, quality_score, assembled["category"])
 
 
 # ══════════════════════════════════════════════════════════════
@@ -528,21 +579,26 @@ def validate_ollama(model: str) -> None:
     except Exception as e:
         log.error("[Ollama] 연결 실패 (%s): %s", OLLAMA_BASE_URL, e)
         sys.exit(1)
-    log.info("[Ollama] 모델: %s", model)
+    log.info("[Ollama] 선택 모델: %s", model)
 
 
 # ══════════════════════════════════════════════════════════════
 # 파이프라인 실행
 # ══════════════════════════════════════════════════════════════
 
-def run_pipeline(topic: dict, model: str, dry_run: bool = False, resume_stage: Optional[str] = None) -> dict:
-    """파이프라인을 실행하고 결과 dict 반환"""
+def run_pipeline(
+    topic: dict,
+    model: str,
+    dry_run: bool = False,
+    resume_stage: Optional[str] = None,
+) -> dict:
     STAGE_ORDER = ["topic", "outline", "write", "quality", "seo"]
     state = load_state() if resume_stage else {}
     t_total = time.time()
 
-    # ── Stage 1: 토픽 분석 ───────────────────────────────────
     resume_idx = STAGE_ORDER.index(resume_stage) if resume_stage in STAGE_ORDER else 0
+
+    # Stage 1: 토픽 분석
     if resume_idx <= 0 or "analysis" not in state:
         analysis = stage_topic(topic, model)
         state.update({"topic": topic, "analysis": analysis})
@@ -552,7 +608,7 @@ def run_pipeline(topic: dict, model: str, dry_run: bool = False, resume_stage: O
         analysis = state["analysis"]
         _emit("[PIPELINE:stage=topic:status=skipped]")
 
-    # ── Stage 2: 아웃라인 ────────────────────────────────────
+    # Stage 2: 아웃라인
     if resume_idx <= 1 or "outline" not in state:
         outline = stage_outline(topic, analysis, model)
         state["outline"] = outline
@@ -561,7 +617,7 @@ def run_pipeline(topic: dict, model: str, dry_run: bool = False, resume_stage: O
         outline = state["outline"]
         _emit("[PIPELINE:stage=outline:status=skipped]")
 
-    # ── Stage 3: 본문 작성 (품질 미달 시 재시도) ───────────────
+    # Stage 3+4: 본문 작성 (품질 미달 시 재시도)
     quality_score = 0
     improved      = ""
     for attempt in range(1, MAX_WRITE_RETRY + 2):
@@ -573,28 +629,25 @@ def run_pipeline(topic: dict, model: str, dry_run: bool = False, resume_stage: O
             draft = state["draft"]
             _emit("[PIPELINE:stage=write:status=skipped]")
 
-        # ── Stage 4: 품질 검토 ────────────────────────────────
         if attempt == 1 and resume_idx <= 3 or "improved" not in state:
             improved, quality_score = stage_quality(draft, analysis, model)
-            state["improved"]      = improved
-            state["quality_score"] = quality_score
+            state["improved"]       = improved
+            state["quality_score"]  = quality_score
             save_state(state)
         else:
             improved      = state["improved"]
             quality_score = state.get("quality_score", 70)
             _emit("[PIPELINE:stage=quality:status=skipped]")
 
-        # 품질 통과 or 마지막 시도면 종료
         if quality_score >= MIN_QUALITY_SCORE or attempt >= MAX_WRITE_RETRY + 1:
             break
 
         log.info("  품질 미달 (score=%d < %d) — 재작성 시도 %d",
                  quality_score, MIN_QUALITY_SCORE, attempt + 1)
-        # 재시도 시 캐시 무효화
         state.pop("draft", None)
         state.pop("improved", None)
 
-    # ── Stage 5: SEO ─────────────────────────────────────────
+    # Stage 5: SEO
     seo = stage_seo(topic, improved, analysis, model)
     state["seo"] = seo
     save_state(state)
@@ -635,13 +688,16 @@ def run_pipeline(topic: dict, model: str, dry_run: bool = False, resume_stage: O
 def main() -> None:
     global _PIPELINE_MODE
 
-    parser = argparse.ArgumentParser(description="ThiveLab Auto Blog Generator")
-    parser.add_argument("--count",         type=int, default=1)
-    parser.add_argument("--dry-run",       action="store_true")
-    parser.add_argument("--pipeline-mode", action="store_true",
-                        help="구조화된 마커 출력 (blog_queue 워커 전용)")
-    parser.add_argument("--stage",         type=str, default=None,
-                        choices=["topic", "outline", "write", "quality", "seo"])
+    parser = argparse.ArgumentParser(description="ThiveLab 쿠팡 파트너스 리뷰 자동 생성기")
+    parser.add_argument("--count",         type=int,  default=1,  help="생성 개수 (기본: 1)")
+    parser.add_argument("--dry-run",       action="store_true",   help="저장 없이 출력만")
+    parser.add_argument("--pipeline-mode", action="store_true",   help="구조화 마커 출력")
+    parser.add_argument("--stage",         type=str,  default=None,
+                        choices=["topic", "outline", "write", "quality", "seo"],
+                        help="특정 스테이지부터 재실행")
+    parser.add_argument("--category",      type=str,  default=None,
+                        choices=SITE_CATEGORIES,
+                        help="특정 카테고리만 생성")
     args = parser.parse_args()
 
     _PIPELINE_MODE = args.pipeline_mode
@@ -659,12 +715,14 @@ def main() -> None:
 
     log.info("사용 가능한 모델: %s", available)
     log.info("선택된 모델: %s", model)
+    if args.category:
+        log.info("카테고리 필터: %s", args.category)
     _emit(f"[PIPELINE:model={model}]")
 
     for i in range(args.count):
         if i > 0:
             time.sleep(5)
-        topic = pick_topic()
+        topic = pick_topic(category_filter=args.category)
         log.info("\n[%d/%d] 토픽: %s (%s)", i + 1, args.count, topic["title"], topic["category"])
         _emit(f"[PIPELINE:topic_title={topic['title']}]")
         run_pipeline(topic, model, dry_run=args.dry_run, resume_stage=args.stage)

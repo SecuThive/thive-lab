@@ -1,103 +1,203 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ArrowLeft, FileText } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Terms of Service - Thive Lab",
-  description: "Terms of Service for Thive Lab services and website.",
+  title: "이용약관 | Thive Lab",
+  description: "Thive Lab 이용약관입니다. 서비스 이용 조건, 면책 사항, 쿠팡 파트너스 관련 안내를 확인하세요.",
 };
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <div className="mx-auto max-w-4xl px-6 py-16 lg:px-8">
-        <Link href="/" className="mb-8 inline-block text-sm text-indigo-400 hover:text-indigo-300">
-          ← Back to Home
+      {/* 헤더 글로우 */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 h-48 bg-gradient-to-b from-amber-500/6 via-transparent to-transparent"
+      />
+
+      <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">
+        <Link
+          href="/"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          홈으로 돌아가기
         </Link>
 
-        <article className="prose prose-invert prose-zinc max-w-none">
-          <h1 className="text-4xl font-semibold text-white">Terms of Service</h1>
-          <p className="text-zinc-400">Last updated: January 22, 2026</p>
+        {/* 헤더 */}
+        <header className="mb-10 space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-4 py-1.5 text-xs text-zinc-400">
+            <FileText className="h-3.5 w-3.5 text-amber-400" />
+            법적 고지
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            이용약관
+          </h1>
+          <p className="text-sm text-zinc-500">최종 수정일: 2026년 4월 14일</p>
+        </header>
 
-          <section className="mt-8 space-y-6 text-zinc-300">
-            <div>
-              <h2 className="text-2xl font-semibold text-white">1. Acceptance of Terms</h2>
-              <p className="mt-2">
-                By accessing and using Thive Lab&apos;s services, you agree to be bound by these Terms of Service and all
-                applicable laws and regulations.
-              </p>
-            </div>
+        <div className="space-y-8 text-sm leading-relaxed text-zinc-300">
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">2. Use License</h2>
-              <p className="mt-2">
-                Permission is granted to temporarily access the materials on Thive Lab&apos;s website for personal,
-                non-commercial transitory viewing only.
-              </p>
-            </div>
+          {/* 쿠팡 파트너스 고지 */}
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+            <p className="text-xs text-zinc-400">
+              <span className="font-semibold text-amber-400">쿠팡 파트너스 고지:</span>{" "}
+              이 사이트는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를
+              제공받을 수 있습니다. 구매자에게는 추가 비용이 발생하지 않습니다.
+            </p>
+          </div>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">3. Disclaimer</h2>
-              <p className="mt-2">
-                The materials on Thive Lab&apos;s website are provided on an &apos;as is&apos; basis. Thive Lab makes no warranties,
-                expressed or implied, and hereby disclaims and negates all other warranties including, without limitation,
-                implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement
-                of intellectual property or other violation of rights.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제1조 (목적)
+            </h2>
+            <p>
+              본 약관은 Thive Lab(이하 "사이트")이 제공하는 서비스를 이용함에 있어
+              이용자의 권리·의무 및 책임 사항을 규정함을 목적으로 합니다.
+            </p>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">4. Limitations</h2>
-              <p className="mt-2">
-                In no event shall Thive Lab or its suppliers be liable for any damages (including, without limitation,
-                damages for loss of data or profit, or due to business interruption) arising out of the use or inability
-                to use the materials on Thive Lab&apos;s website.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제2조 (서비스 설명)
+            </h2>
+            <p>
+              Thive Lab은 쿠팡 파트너스 제휴 기반의 상품 추천 및 리뷰 정보를 제공하는
+              정보 공유 사이트입니다. 사이트에서 제공하는 주요 서비스는 다음과 같습니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>카테고리별 제품 추천 및 비교 리뷰 콘텐츠 제공</li>
+              <li>쿠팡 최저가 구매 링크 안내 (파트너스 제휴 링크 포함)</li>
+              <li>HOT 딜 및 에디터 픽 상품 정보 제공</li>
+            </ul>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">5. Accuracy of Materials</h2>
-              <p className="mt-2">
-                The materials appearing on Thive Lab&apos;s website could include technical, typographical, or photographic
-                errors. Thive Lab does not warrant that any of the materials on its website are accurate, complete, or
-                current.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제3조 (이용 조건)
+            </h2>
+            <p>
+              사이트에 접속하고 콘텐츠를 열람함으로써 이용자는 본 약관에 동의한 것으로
+              간주합니다. 약관에 동의하지 않으시면 사이트 이용을 중단해 주시기 바랍니다.
+            </p>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">6. Links</h2>
-              <p className="mt-2">
-                Thive Lab has not reviewed all of the sites linked to its website and is not responsible for the contents
-                of any such linked site.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제4조 (콘텐츠 및 정보 정확성)
+            </h2>
+            <p>
+              사이트에 게재된 제품 정보, 가격, 리뷰 내용은 작성 시점을 기준으로 하며,
+              실제 판매 가격 및 제품 사양은 쿠팡 등 판매 플랫폼에서 변경될 수 있습니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>게시된 가격 정보는 참고용이며 실제 구매가와 다를 수 있습니다.</li>
+              <li>리뷰 내용은 운영자의 개인적인 사용 경험을 바탕으로 작성됩니다.</li>
+              <li>제품 구매 전 쿠팡 상품 페이지에서 최신 정보를 반드시 확인하시기 바랍니다.</li>
+            </ul>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">7. Modifications</h2>
-              <p className="mt-2">
-                Thive Lab may revise these terms of service for its website at any time without notice. By using this
-                website you are agreeing to be bound by the then current version of these terms of service.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제5조 (쿠팡 파트너스 제휴 링크)
+            </h2>
+            <p>
+              이 사이트는 쿠팡 파트너스 프로그램에 참여하고 있으며, 제휴 링크를 통한
+              구매 시 운영자에게 수수료가 지급됩니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>제휴 링크 이용 시 구매자에게 추가 비용이 발생하지 않습니다.</li>
+              <li>수수료는 콘텐츠의 객관성에 영향을 주지 않습니다.</li>
+              <li>제휴 링크임을 명시한 경우 이를 인지하고 이용하시기 바랍니다.</li>
+              <li>실제 구매, 결제, 배송, 환불은 쿠팡의 정책을 따릅니다.</li>
+            </ul>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">8. Governing Law</h2>
-              <p className="mt-2">
-                These terms and conditions are governed by and construed in accordance with the laws and you irrevocably
-                submit to the exclusive jurisdiction of the courts in that location.
-              </p>
-            </div>
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제6조 (지식재산권)
+            </h2>
+            <p>
+              사이트에 게재된 텍스트, 이미지, 레이아웃 등 모든 콘텐츠의 저작권은
+              Thive Lab에 있습니다. 무단 복제, 배포, 전송은 금지됩니다.
+            </p>
+            <p className="mt-2">
+              단, 출처를 명시한 인용 및 공유는 허용됩니다.
+            </p>
+          </section>
 
-            <div>
-              <h2 className="text-2xl font-semibold text-white">9. Contact Information</h2>
-              <p className="mt-2">
-                If you have any questions about these Terms, please contact us at:{" "}
-                <a href="mailto:thive8564@gmail.com" className="text-indigo-400 hover:text-indigo-300">
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제7조 (면책 조항)
+            </h2>
+            <p>사이트는 다음 사항에 대해 책임을 지지 않습니다.</p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>이용자가 사이트 정보를 기반으로 한 구매 결정으로 인한 손해</li>
+              <li>제3자 사이트(쿠팡 등)에서 발생한 결제·배송·환불 관련 문제</li>
+              <li>서비스 이용 중 발생한 기술적 장애 또는 데이터 손실</li>
+              <li>천재지변, 서버 장애 등 불가항력적 사유로 인한 서비스 중단</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제8조 (외부 링크)
+            </h2>
+            <p>
+              사이트는 쿠팡, 네이버, 구글 등 외부 사이트로의 링크를 포함할 수 있습니다.
+              외부 사이트의 내용 및 서비스에 대해 Thive Lab은 책임을 지지 않으며,
+              각 사이트의 약관 및 개인정보처리방침이 적용됩니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제9조 (약관의 변경)
+            </h2>
+            <p>
+              Thive Lab은 관련 법령 변경 또는 서비스 정책에 따라 본 약관을 수정할 수 있습니다.
+              변경된 약관은 사이트 내 공지 후 효력이 발생하며, 변경 후 계속 이용 시
+              변경 약관에 동의한 것으로 간주합니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제10조 (준거법 및 관할)
+            </h2>
+            <p>
+              본 약관은 대한민국 법률에 따라 해석 및 적용됩니다. 서비스 이용과 관련된
+              분쟁은 대한민국 관할 법원을 통해 해결합니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제11조 (문의처)
+            </h2>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-1 text-zinc-400">
+              <p><span className="text-zinc-300 font-medium">운영자:</span> Thive Lab</p>
+              <p>
+                <span className="text-zinc-300 font-medium">이메일:</span>{" "}
+                <a href="mailto:thive8564@gmail.com" className="text-amber-400 hover:text-amber-300">
                   thive8564@gmail.com
                 </a>
               </p>
             </div>
           </section>
-        </article>
+
+        </div>
+
+        <div className="mt-12">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            홈으로 돌아가기
+          </Link>
+        </div>
       </div>
     </div>
   );
