@@ -8,16 +8,38 @@
 
 body {
   @apply min-h-screen bg-zinc-950 font-sans text-zinc-100 antialiased;
-  background-image: radial-gradient(circle at top left, rgba(79, 70, 229, 0.15), transparent 45%),
-    radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.08), transparent 50%);
+  background-image:
+    radial-gradient(circle at top right,  rgba(245, 158, 11, 0.10), transparent 50%),
+    radial-gradient(circle at 10% 85%,   rgba(234, 88,  12, 0.07), transparent 50%);
   background-repeat: no-repeat;
 }
 
 ::selection {
-  @apply bg-indigo-500/60 text-white;
+  @apply bg-amber-500/50 text-white;
 }
 
-/* ── 블로그 포스트 본문 스타일 ────────────────────────────── */
+/* ── 쿠팡 파트너스 CTA 버튼 ──────────────────────────────────── */
+.btn-coupang {
+  @apply inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5
+         text-sm font-semibold text-black shadow-lg shadow-amber-500/20
+         transition hover:bg-amber-400 active:scale-95;
+}
+
+/* ── 상품 카드 ─────────────────────────────────────────────── */
+.product-card {
+  @apply relative flex flex-col overflow-hidden rounded-2xl border border-zinc-800/60
+         bg-zinc-900/50 transition hover:border-amber-500/30 hover:bg-zinc-900/80;
+}
+
+/* ── 카테고리 필 ─────────────────────────────────────────── */
+.category-pill {
+  @apply rounded-full border border-zinc-700/60 bg-zinc-900/60 px-4 py-1.5 text-sm
+         text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-300
+         data-[active=true]:border-amber-500 data-[active=true]:bg-amber-500/10
+         data-[active=true]:text-amber-300;
+}
+
+/* ── 블로그 / 리뷰 포스트 본문 ───────────────────────────────── */
 .prose-blog {
   @apply text-zinc-300 leading-relaxed;
 }
@@ -37,10 +59,10 @@ body {
 .prose-blog strong { @apply font-semibold text-white; }
 .prose-blog em    { @apply italic text-zinc-200; }
 .prose-blog hr    { @apply border-zinc-800 my-8; }
-.prose-blog a     { @apply text-indigo-400 underline underline-offset-2 hover:text-indigo-300; }
+.prose-blog a     { @apply text-amber-400 underline underline-offset-2 hover:text-amber-300; }
 
 .prose-blog code {
-  @apply rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm font-mono text-indigo-300;
+  @apply rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm font-mono text-amber-300;
 }
 .prose-blog pre {
   @apply mb-6 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/80 p-5;
@@ -48,3 +70,16 @@ body {
 .prose-blog pre code {
   @apply bg-transparent px-0 py-0 text-sm text-zinc-200;
 }
+
+/* ── 가격 표시 ──────────────────────────────────────────────── */
+.price-sale   { @apply text-amber-400 font-bold; }
+.price-origin { @apply text-zinc-500 line-through text-sm; }
+.badge-discount {
+  @apply rounded-md bg-red-500/20 px-1.5 py-0.5 text-xs font-bold text-red-400;
+}
+.badge-hot {
+  @apply rounded-md bg-amber-500/20 px-1.5 py-0.5 text-xs font-bold text-amber-400;
+}
+
+/* ── 별점 ────────────────────────────────────────────────────── */
+.star-rating { @apply flex items-center gap-0.5 text-amber-400; }

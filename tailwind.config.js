@@ -12,7 +12,8 @@ module.exports = {
       },
       colors: {
         brand: {
-          indigo: "#818CF8",
+          amber:  "#F59E0B",
+          orange: "#EA580C",
         },
       },
     },

@@ -9,9 +9,9 @@ import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Thive Lab — Automation Tools & Data Services for Modern Teams",
-  description: "Thive Lab delivers automated utilities and data-driven services that eliminate busywork. From pricing intelligence to hiring automation, we build tools that save time and drive results.",
-  keywords: ["automation tools", "data services", "business automation", "workflow automation", "SaaS tools", "productivity tools", "startup tools"],
+  title: "Thive Lab — 쿠팡 파트너스 추천 & 상품 리뷰",
+  description: "실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다. 가전, 생활용품, 뷰티, 주방용품 등 카테고리별 추천 상품을 쿠팡 최저가로 확인하세요.",
+  keywords: ["쿠팡 파트너스", "상품 추천", "제품 리뷰", "쿠팡 할인", "가성비 추천", "생활용품 추천", "가전 추천", "뷰티 추천"],
   authors: [{ name: "Thive Lab" }],
   creator: "Thive Lab",
   publisher: "Thive Lab",
@@ -19,34 +19,26 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/icon.png", type: "image/png" },
+      { url: "/icon.png",    type: "image/png" },
     ],
   },
   alternates: {
     canonical: "https://thivelab.com",
   },
   openGraph: {
-    title: "Thive Lab — Automation Tools & Data Services",
-    description: "Automated utilities and data-driven services designed to eliminate busywork for modern teams.",
+    title: "Thive Lab — 쿠팡 파트너스 추천 & 상품 리뷰",
+    description: "실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다.",
     url: "https://thivelab.com",
     siteName: "Thive Lab",
-    locale: "en_US",
+    locale: "ko_KR",
     type: "website",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Thive Lab - Automation Tools",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     site: "@devthive",
     creator: "@devthive",
-    title: "Thive Lab — Automation Tools & Data Services",
-    description: "Automated utilities that eliminate busywork for modern teams.",
+    title: "Thive Lab — 쿠팡 파트너스 추천 & 상품 리뷰",
+    description: "실생활에 도움이 되는 제품 리뷰 & 쿠팡 파트너스 추천",
   },
   robots: {
     index: true,
@@ -59,20 +51,16 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    // Google Search Console 인증 후 여기에 추가
-    // google: 'your-google-verification-code',
-  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="bg-zinc-950">
+    <html lang="ko" className="bg-zinc-950">
       <head>
         <link
           rel="alternate"
           type="application/rss+xml"
-          title="Thive Lab RSS Feed"
+          title="Thive Lab RSS"
           href="/rss.xml"
         />
         <AdSenseScript />
