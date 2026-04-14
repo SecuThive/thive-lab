@@ -1,4 +1,4 @@
-# Thive Lab - 프로젝트 포트폴리오
+## Thive Lab - 프로젝트 포트폴리오
 
 Next.js와 Supabase를 사용한 프로젝트 관리 포트폴리오 사이트
 
