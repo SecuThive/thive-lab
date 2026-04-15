@@ -16,8 +16,13 @@ import {
   Cpu,
   LogOut,
   RefreshCw,
+  Activity,
+  FolderOpen,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
+import StatusTab from "./tabs/StatusTab";
+import CronTab from "./tabs/CronTab";
 
 const ICON_OPTIONS = {
   Radar: <Radar className="h-5 w-5" />,
@@ -65,6 +70,7 @@ export default function AdminPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"status" | "projects" | "cron">("status");
 
   useEffect(() => {
     const token = sessionStorage.getItem("admin_token");
@@ -246,8 +252,34 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Projects Table */}
-        {isLoading ? (
+        {/* 탭 네비게이션 */}
+        <div className="mb-8 flex gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-1">
+          {([
+            { id: "status" as const, label: "서비스 현황", icon: <Activity className="h-4 w-4" /> },
+            { id: "projects" as const, label: "프로젝트 관리", icon: <FolderOpen className="h-4 w-4" /> },
+            { id: "cron" as const, label: "크론 설정", icon: <Clock className="h-4 w-4" /> },
+          ]).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                activeTab === tab.id
+                  ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
+                  : "text-zinc-500 hover:text-zinc-300 border border-transparent"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 탭 콘텐츠 */}
+        {activeTab === "status" && <StatusTab />}
+        {activeTab === "cron" && <CronTab />}
+
+        {/* Projects Table — 프로젝트 관리 탭 */}
+        {activeTab === "projects" && (isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-zinc-400">데이터를 불러오는 중...</div>
           </div>
@@ -366,7 +398,7 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
-        )}
+        ))}
 
         {/* Form Modal */}
         {isFormOpen && (
