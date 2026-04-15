@@ -183,9 +183,11 @@ def pick_topic(category_filter: Optional[str] = None) -> dict:
     return random.choice(pool)
 
 def slugify(text: str) -> str:
-    text = re.sub(r"[^\w\s-]", "", text.lower())
+    """영문/숫자/하이픈만 남기는 URL-safe slug 생성 (한글 제거)"""
+    text = re.sub(r"[^a-zA-Z0-9\s-]", "", text.lower())
     text = re.sub(r"[\s_]+", "-", text)
-    return text.strip("-")[:80]
+    text = re.sub(r"-+", "-", text)
+    return text.strip("-")[:80] or "post"
 
 def unique_slug(base_slug: str) -> str:
     slug = slugify(base_slug)
@@ -808,7 +810,9 @@ def run_pipeline(
         print("─" * 65)
         print(assembled["content"][:1000], "\n…")
     else:
-        slug = unique_slug(slugify(assembled["title"]))
+        # SEO 단계에서 생성한 영문 slug 우선 사용, 없으면 topic key fallback
+        raw_slug = seo.get("slug_suggestion") or topic.get("key", "") or slugify(assembled["title"])
+        slug = unique_slug(slugify(raw_slug))
         save_to_supabase(topic, assembled, slug, quality_score)
         _save_history(topic["key"])
         log.info("[완료] /blog/%s (score=%d, %.1fs, affiliate=%s)",

@@ -20,7 +20,9 @@ type BlogPost = {
   product_image?: string | null;
 };
 
-async function getPost(slug: string): Promise<BlogPost | null> {
+async function getPost(rawSlug: string): Promise<BlogPost | null> {
+  // Next.js가 URL-encoded slug를 전달할 수 있으므로 디코딩
+  const slug = decodeURIComponent(rawSlug);
   try {
     const { data, error } = await supabase
       .from("blog_posts")
@@ -28,9 +30,13 @@ async function getPost(slug: string): Promise<BlogPost | null> {
       .eq("slug", slug)
       .eq("status", "published")
       .single();
-    if (error || !data) return null;
+    if (error || !data) {
+      console.error("[blog/slug] getPost failed:", slug, error?.message);
+      return null;
+    }
     return data as BlogPost;
-  } catch {
+  } catch (e) {
+    console.error("[blog/slug] getPost exception:", slug, e);
     return null;
   }
 }
@@ -53,7 +59,7 @@ async function getRelatedPosts(category: string | null, currentSlug: string): Pr
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
   if (!post) return { title: "Not Found", robots: { index: false, follow: false } };
-  const canonical = `https://thivelab.com/blog/${params.slug}`;
+  const canonical = `https://thivelab.com/blog/${encodeURIComponent(post.slug)}`;
   return {
     title: `${post.title} | Thive Lab 리뷰`,
     description: post.summary ?? undefined,
