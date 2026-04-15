@@ -71,11 +71,11 @@ def _emit(marker: str) -> None:
 # ── 모델 품질 우선순위 ─────────────────────────────────────────
 MODEL_PRIORITY = [
     "llama3.3", "llama3.2", "llama3.1",
+    "gemma4:e4b", "gemma4:27b", "gemma4:12b", "gemma4",
+    "gemma3:27b", "gemma3:12b", "gemma3",
     "deepseek-r1",
     "qwen2.5:32b", "qwen2.5:14b", "qwen2.5:7b", "qwen2.5",
     "qwen2.5-coder:32b",
-    "gemma3:27b", "gemma3:12b", "gemma3",
-    "gemma4:27b", "gemma4:12b", "gemma4:e4b", "gemma4",
     "mistral-large", "mistral",
     "phi4", "phi3",
 ]
@@ -570,12 +570,32 @@ def stage_seo(topic: dict, content: str, analysis: dict, model: str) -> dict:
 # ══════════════════════════════════════════════════════════════
 
 def _strip_non_korean(text: str) -> str:
-    """LLM이 혼입하는 중국어/일본어 문자를 제거 (한글·영문·숫자·기호만 유지)"""
-    # CJK Unified Ideographs (중국어 한자) 제거 — 단, 한국어에서 쓰는 한자도 포함될 수 있으므로
-    # 문장 내 한자 단어를 통째로 제거 (한글 앞뒤 없이 한자만 나열된 경우)
+    """LLM이 혼입하는 비한국어 스크립트 제거 (한글·영문·숫자·기호·마크다운만 유지)"""
+    # CJK Unified Ideographs (중국어 한자) 제거
     text = re.sub(r"[\u4e00-\u9fff]+", "", text)
     # 일본어 히라가나/카타카나 제거
     text = re.sub(r"[\u3040-\u30ff]+", "", text)
+    # 키릴 문자 (러시아어 등) 제거
+    text = re.sub(r"[\u0400-\u04ff]+", "", text)
+    # 아랍 문자 제거
+    text = re.sub(r"[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]+", "", text)
+    # 태국어 제거
+    text = re.sub(r"[\u0e00-\u0e7f]+", "", text)
+    # 데바나가리 (힌디어 등) 제거
+    text = re.sub(r"[\u0900-\u097f]+", "", text)
+    # 기타 비라틴/비한글 스크립트 (그루지아, 아르메니아, 히브리 등) 제거
+    text = re.sub(r"[\u0530-\u058f\u0590-\u05ff\u10a0-\u10ff]+", "", text)
+    # 전체가 비한글인 줄 제거 (한글이 하나도 없고 영문/숫자/공백/기호만 있는 줄은 유지)
+    lines = text.split("\n")
+    cleaned = []
+    for line in lines:
+        stripped = line.strip()
+        # 빈 줄, 마크다운 기호로 시작하는 줄, 한글 포함 줄, 영문/숫자/기호만 있는 줄은 유지
+        if (not stripped
+                or re.search(r"[가-힣ㄱ-ㅎㅏ-ㅣ]", stripped)
+                or re.match(r"^[a-zA-Z0-9\s\-_.,!?:;\'\"()\[\]{}<>/@#$%^&*+=~`|\\/#*>]+$", stripped)):
+            cleaned.append(line)
+    text = "\n".join(cleaned)
     # 연속 공백 정리
     text = re.sub(r"  +", " ", text)
     return text.strip()

@@ -71,13 +71,14 @@ type RecentPost = {
   tags: string[];
   created_at: string;
   affiliate_url?: string | null;
+  product_image?: string | null;
 };
 
 async function getRecentPosts(): Promise<RecentPost[]> {
   try {
     const { data } = await supabase
       .from("blog_posts")
-      .select("id, slug, title, summary, category, tags, created_at, affiliate_url")
+      .select("id, slug, title, summary, category, tags, created_at, affiliate_url, product_image")
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(6);
@@ -312,43 +313,63 @@ function PostCard({ post }: { post: RecentPost }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group flex flex-col gap-3 rounded-2xl border border-zinc-800/60 bg-zinc-900/30 p-5 transition hover:border-amber-500/30 hover:bg-zinc-900/60"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/30 transition hover:border-amber-500/30 hover:bg-zinc-900/60"
     >
-      {/* 카테고리 + 날짜 */}
-      <div className="flex items-center justify-between gap-2">
-        {post.category && (
-          <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${catStyle(post.category)}`}>
-            {post.category}
-          </span>
-        )}
-        <time className="ml-auto text-xs text-zinc-600">
-          {dateFormatter.format(new Date(post.created_at))}
-        </time>
-      </div>
-
-      {/* 제목 */}
-      <h3 className="text-sm font-semibold leading-snug text-zinc-100 line-clamp-2 group-hover:text-amber-300 transition-colors">
-        {post.title}
-      </h3>
-
-      {/* 요약 */}
-      {post.summary && (
-        <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-          {post.summary}
-        </p>
+      {/* 상품 이미지 */}
+      {post.product_image && (
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-800/50">
+          <img
+            src={post.product_image}
+            alt={post.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+          {post.affiliate_url && (
+            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-black">
+              <ShoppingBag className="h-2.5 w-2.5" />
+              쿠팡
+            </span>
+          )}
+        </div>
       )}
 
-      {/* 하단 */}
-      <div className="mt-auto flex items-center justify-between">
-        {post.affiliate_url ? (
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400">
-            <ShoppingBag className="h-3 w-3" />
-            쿠팡 링크
-          </span>
-        ) : (
-          <span />
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        {/* 카테고리 + 날짜 */}
+        <div className="flex items-center justify-between gap-2">
+          {post.category && (
+            <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${catStyle(post.category)}`}>
+              {post.category}
+            </span>
+          )}
+          <time className="ml-auto text-xs text-zinc-600">
+            {dateFormatter.format(new Date(post.created_at))}
+          </time>
+        </div>
+
+        {/* 제목 */}
+        <h3 className="text-sm font-semibold leading-snug text-zinc-100 line-clamp-2 group-hover:text-amber-300 transition-colors">
+          {post.title}
+        </h3>
+
+        {/* 요약 */}
+        {post.summary && (
+          <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+            {post.summary}
+          </p>
         )}
-        <ArrowUpRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 transition-colors" />
+
+        {/* 하단 */}
+        <div className="mt-auto flex items-center justify-between pt-1">
+          {post.affiliate_url && !post.product_image ? (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400">
+              <ShoppingBag className="h-3 w-3" />
+              쿠팡 추천
+            </span>
+          ) : (
+            <span />
+          )}
+          <ArrowUpRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 transition-colors" />
+        </div>
       </div>
     </Link>
   );

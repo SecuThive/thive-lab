@@ -130,56 +130,70 @@ function ReviewListInner() {
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="group flex flex-col gap-3 rounded-2xl border border-zinc-800/60 bg-zinc-900/30 p-5 transition hover:border-amber-500/30 hover:bg-zinc-900/60"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-zinc-800/60 bg-zinc-900/30 transition hover:border-amber-500/30 hover:bg-zinc-900/60"
               >
-                {/* 카테고리 + 날짜 */}
-                <div className="flex items-center justify-between gap-2">
-                  {post.category && (
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${catStyle(post.category)}`}>
-                      {post.category}
-                    </span>
-                  )}
-                  <time className="ml-auto text-xs text-zinc-600">
-                    {dateFormatter.format(new Date(post.created_at))}
-                  </time>
-                </div>
-
-                {/* 제목 */}
-                <h2 className="text-sm font-semibold leading-snug text-zinc-100 line-clamp-2 group-hover:text-amber-300 transition-colors">
-                  {post.title}
-                </h2>
-
-                {/* 요약 */}
-                {post.summary && (
-                  <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                    {post.summary}
-                  </p>
-                )}
-
-                {/* 태그 */}
-                {post.tags?.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <Tag className="h-3 w-3 text-zinc-700" />
-                    {post.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded border border-zinc-800 bg-zinc-950/60 px-1.5 py-0.5 text-[10px] text-zinc-600"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                {/* 상품 이미지 */}
+                {post.product_image && (
+                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-800/50">
+                    <img
+                      src={post.product_image}
+                      alt={post.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
                   </div>
                 )}
 
-                {/* 하단 */}
-                <div className="mt-auto flex items-center justify-between">
-                  {post.affiliate_url ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400/80">
-                      <ShoppingBag className="h-3 w-3" />
-                      쿠팡 구매 가능
-                    </span>
-                  ) : <span />}
-                  <ArrowUpRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 transition-colors" />
+                <div className="flex flex-1 flex-col gap-3 p-5">
+                  {/* 카테고리 + 날짜 */}
+                  <div className="flex items-center justify-between gap-2">
+                    {post.category && (
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${catStyle(post.category)}`}>
+                        {post.category}
+                      </span>
+                    )}
+                    <time className="ml-auto text-xs text-zinc-600">
+                      {dateFormatter.format(new Date(post.created_at))}
+                    </time>
+                  </div>
+
+                  {/* 제목 */}
+                  <h2 className="text-sm font-semibold leading-snug text-zinc-100 line-clamp-2 group-hover:text-amber-300 transition-colors">
+                    {post.title}
+                  </h2>
+
+                  {/* 요약 */}
+                  {post.summary && (
+                    <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+                      {post.summary}
+                    </p>
+                  )}
+
+                  {/* 태그 */}
+                  {post.tags?.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <Tag className="h-3 w-3 text-zinc-700" />
+                      {post.tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded border border-zinc-800 bg-zinc-950/60 px-1.5 py-0.5 text-[10px] text-zinc-600"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 하단 */}
+                  <div className="mt-auto flex items-center justify-between">
+                    {post.affiliate_url ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400/80">
+                        <ShoppingBag className="h-3 w-3" />
+                        쿠팡 추천
+                      </span>
+                    ) : <span />}
+                    <ArrowUpRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 transition-colors" />
+                  </div>
                 </div>
               </Link>
             ))}
