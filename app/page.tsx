@@ -323,8 +323,8 @@ function PostCard({ post }: { post: RecentPost }) {
             src={post.product_image}
             alt={post.title}
             fill
-            unoptimized
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, 33vw"
           />
           {post.affiliate_url && (
             <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-black">
