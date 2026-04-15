@@ -204,34 +204,84 @@ def unique_slug(base_slug: str) -> str:
         slug = f"{slugify(base_slug)}-{suffix}"
         suffix += 1
 
+def _md_table_to_html(block: str) -> str:
+    """마크다운 테이블 블록 → HTML <table> 변환"""
+    lines = [l.strip() for l in block.strip().split("\n") if l.strip()]
+    if len(lines) < 2:
+        return block
+
+    def parse_row(line: str) -> list[str]:
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        return cells
+
+    header_cells = parse_row(lines[0])
+    # 두 번째 줄이 구분선(---|---)인지 확인
+    if not re.match(r"^[\s|:-]+$", lines[1]):
+        return block
+
+    rows = [parse_row(l) for l in lines[2:] if not re.match(r"^[\s|:-]+$", l)]
+
+    html = '<div class="overflow-x-auto mb-6"><table class="w-full text-sm border-collapse">\n<thead><tr>'
+    for cell in header_cells:
+        html += f'<th class="border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-left text-xs font-semibold text-zinc-200">{cell}</th>'
+    html += '</tr></thead>\n<tbody>'
+    for row in rows:
+        html += '<tr>'
+        for cell in row:
+            html += f'<td class="border border-zinc-800 px-3 py-2 text-zinc-300">{cell}</td>'
+        html += '</tr>\n'
+    html += '</tbody></table></div>'
+    return html
+
+
 def md_to_html(md: str) -> str:
     """마크다운 → prose-blog 클래스 호환 HTML 변환"""
     html = md
-    # 코드 블록
+
+    # 1. 코드 블록 (먼저 처리 — 내부 | 등이 테이블로 오인되지 않도록)
     html = re.sub(
         r"```(\w*)\n([\s\S]*?)```",
         lambda m: f'<pre><code class="language-{m.group(1)}">{m.group(2).rstrip()}</code></pre>',
         html,
     )
     html = re.sub(r"`([^`]+)`", r"<code>\1</code>", html)
-    # 헤딩
+
+    # 2. 마크다운 테이블 → HTML <table>
+    # 테이블 블록: | 로 시작하는 연속 줄 (최소 3줄: 헤더 + 구분선 + 데이터)
+    def replace_table(m: re.Match) -> str:
+        return _md_table_to_html(m.group(0))
+    html = re.sub(
+        r"(?:^[ \t]*\|.+\|[ \t]*\n){3,}",
+        replace_table,
+        html,
+        flags=re.MULTILINE,
+    )
+
+    # 3. 헤딩
     for n in range(4, 0, -1):
         html = re.sub(r"^" + "#" * n + r" (.+)$", rf"<h{n}>\1</h{n}>", html, flags=re.MULTILINE)
-    # 강조
+
+    # 4. 강조
+    html = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", html)
     html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
     html = re.sub(r"\*(.+?)\*",     r"<em>\1</em>",         html)
-    # 리스트
-    html = re.sub(r"^[-*] (.+)$",  r"<li>\1</li>",         html, flags=re.MULTILINE)
-    html = re.sub(r"(<li>.*</li>)", r"<ul>\1</ul>",         html, flags=re.DOTALL)
-    html = re.sub(r"^---+$",        "<hr>",                  html, flags=re.MULTILINE)
-    # 단락
+
+    # 5. 수평선 (테이블 구분선과 혼동 방지 — 테이블은 이미 처리됨)
+    html = re.sub(r"^---+$", "<hr>", html, flags=re.MULTILINE)
+    html = re.sub(r"^\*\*\*+$", "<hr>", html, flags=re.MULTILINE)
+
+    # 6. 리스트
+    html = re.sub(r"^[-*] (.+)$", r"<li>\1</li>", html, flags=re.MULTILINE)
+    html = re.sub(r"(<li>.*</li>)", r"<ul>\1</ul>", html, flags=re.DOTALL)
+
+    # 7. 단락
     paragraphs = re.split(r"\n{2,}", html.strip())
     parts = []
     for p in paragraphs:
         p = p.strip()
         if not p:
             continue
-        if p.startswith(("<h", "<ul", "<pre", "<hr")):
+        if p.startswith(("<h", "<ul", "<pre", "<hr", "<div", "<table")):
             parts.append(p)
         else:
             parts.append(f"<p>{p.replace(chr(10), '<br>')}</p>")

@@ -61,6 +61,11 @@ body {
 .prose-blog hr    { @apply border-zinc-800 my-8; }
 .prose-blog a     { @apply text-amber-400 underline underline-offset-2 hover:text-amber-300; }
 
+.prose-blog table { @apply w-full text-sm border-collapse mb-6; }
+.prose-blog thead th { @apply border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-left text-xs font-semibold text-zinc-200; }
+.prose-blog tbody td { @apply border border-zinc-800 px-3 py-2 text-zinc-300; }
+.prose-blog tbody tr:hover { @apply bg-zinc-800/30; }
+
 .prose-blog code {
   @apply rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm font-mono text-amber-300;
 }
