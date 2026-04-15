@@ -51,7 +51,7 @@ export default function Navbar() {
               }`}
             >
               <Flame className="h-3.5 w-3.5" />
-              전체 리뷰
+              추천 가이드
             </Link>
 
             {/* 카테고리 드롭다운 */}
@@ -119,7 +119,7 @@ export default function Navbar() {
               className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-amber-300 transition-colors"
             >
               <FileText className="h-4 w-4" />
-              전체 리뷰
+              추천 가이드
             </Link>
             <div className="px-4 py-2">
               <p className="mb-2 text-xs uppercase tracking-widest text-zinc-600">카테고리</p>

@@ -220,14 +220,14 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <p className="text-xs text-zinc-600 leading-relaxed">
             <span className="font-medium text-zinc-500">쿠팡 파트너스 고지:</span>{" "}
             이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.
-            구매자에게는 추가 비용이 발생하지 않습니다.
+            구매자에게는 추가 비용이 발생하지 않으며, 추천 상품은 쿠팡 실구매자 데이터를 기반으로 선정됩니다.
           </p>
         </div>
 
         {/* ── 관련 글 ───────────────────────────────────────────────────── */}
         {related.length > 0 && (
           <div className="mt-12">
-            <h2 className="mb-5 text-lg font-semibold text-white">관련 리뷰</h2>
+            <h2 className="mb-5 text-lg font-semibold text-white">관련 추천 가이드</h2>
             <div className="space-y-3">
               {related.map((r) => (
                 <Link
@@ -250,7 +250,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             className="inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
           >
             <ArrowLeft className="h-4 w-4" />
-            전체 리뷰 보기
+            전체 추천 보기
           </Link>
         </div>
 
@@ -275,8 +275,8 @@ function AffiliateCTA({
         <div className="mb-3 flex justify-center">
           <ShoppingCart className="h-8 w-8 text-amber-400" />
         </div>
-        <p className="mb-1 text-sm font-semibold text-white">이 제품이 마음에 드셨나요?</p>
-        <p className="mb-5 text-xs text-zinc-500">쿠팡에서 최저가로 구매할 수 있어요.</p>
+        <p className="mb-1 text-sm font-semibold text-white">이 상품이 궁금하신가요?</p>
+        <p className="mb-5 text-xs text-zinc-500">쿠팡에서 실구매자 리뷰와 최저가를 확인해 보세요.</p>
         <a
           href={href}
           target="_blank"

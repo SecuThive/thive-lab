@@ -9,9 +9,9 @@ import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Thive Lab — 쿠팡 파트너스 추천 & 상품 리뷰",
-  description: "실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다. 가전, 생활용품, 뷰티, 주방용품 등 카테고리별 추천 상품을 쿠팡 최저가로 확인하세요.",
-  keywords: ["쿠팡 파트너스", "상품 추천", "제품 리뷰", "쿠팡 할인", "가성비 추천", "생활용품 추천", "가전 추천", "뷰티 추천"],
+  title: "Thive Lab — 쿠팡 실구매 데이터 기반 상품 추천",
+  description: "쿠팡 실구매자 평점·리뷰 데이터를 분석해 카테고리별 가성비 좋은 상품을 추천합니다. 가전, 생활용품, 뷰티, 주방용품 등 비교 가이드를 확인하세요.",
+  keywords: ["쿠팡 추천", "상품 비교", "가성비 추천", "쿠팡 할인", "상품 추천 가이드", "생활용품 추천", "가전 추천", "쿠팡 파트너스"],
   authors: [{ name: "Thive Lab" }],
   creator: "Thive Lab",
   publisher: "Thive Lab",
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     canonical: "https://thivelab.com",
   },
   openGraph: {
-    title: "Thive Lab — 쿠팡 파트너스 추천 & 상품 리뷰",
-    description: "실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다.",
+    title: "Thive Lab — 쿠팡 실구매 데이터 기반 상품 추천",
+    description: "쿠팡 실구매자 평점·리뷰 데이터를 분석해 카테고리별 가성비 좋은 상품을 추천합니다.",
     url: "https://thivelab.com",
     siteName: "Thive Lab",
     locale: "ko_KR",
@@ -37,8 +37,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@devthive",
     creator: "@devthive",
-    title: "Thive Lab — 쿠팡 파트너스 추천 & 상품 리뷰",
-    description: "실생활에 도움이 되는 제품 리뷰 & 쿠팡 파트너스 추천",
+    title: "Thive Lab — 쿠팡 실구매 데이터 기반 상품 추천",
+    description: "쿠팡 실구매자 데이터 기반 카테고리별 가성비 상품 추천",
   },
   robots: {
     index: true,
@@ -59,7 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "@type": "WebSite",
     name: "Thive Lab",
     url: "https://thivelab.com",
-    description: "실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다.",
+    description: "쿠팡 실구매자 평점·리뷰 데이터를 분석해 카테고리별 가성비 좋은 상품을 추천합니다.",
     inLanguage: "ko-KR",
     publisher: {
       "@type": "Organization",

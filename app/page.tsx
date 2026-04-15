@@ -123,19 +123,19 @@ export default async function HomePage() {
           {/* 뱃지 */}
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/8 px-4 py-1.5 text-xs font-medium text-amber-300">
             <Flame className="h-3.5 w-3.5" />
-            <span>쿠팡 파트너스 추천 & 실사용 리뷰</span>
+            <span>쿠팡 실구매자 데이터 기반 추천</span>
           </div>
 
           <h1 className="mb-5 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            진짜 써본 사람만 아는<br />
+            뭘 사야 할지 모를 때<br />
             <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-              가성비 추천
+              딱 정리해 드립니다
             </span>
           </h1>
 
           <p className="mx-auto mb-8 max-w-xl text-base text-zinc-400 leading-relaxed">
-            직접 구매하고 사용한 제품들을 솔직하게 리뷰합니다.<br />
-            쿠팡 파트너스를 통해 최저가로 구매할 수 있어요.
+            쿠팡 실구매자 평점·리뷰 수·가격 데이터를 분석해<br />
+            카테고리별 가성비 TOP 상품을 큐레이션합니다.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -144,7 +144,7 @@ export default async function HomePage() {
               className="btn-coupang text-sm"
             >
               <ShoppingBag className="h-4 w-4" />
-              전체 리뷰 보기
+              추천 상품 보기
             </Link>
             <Link
               href="#categories"
@@ -224,15 +224,15 @@ export default async function HomePage() {
       <section className="px-4 pb-14 lg:px-8">
         <div className="mx-auto max-w-5xl">
           <SectionHeader
-            label="최신 리뷰"
-            title="솔직한 사용 후기"
+            label="최신 가이드"
+            title="최근 올라온 추천 가이드"
             icon={<Zap className="h-4 w-4 text-amber-400" />}
             href="/blog"
           />
 
           {posts.length === 0 ? (
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 py-14 text-center">
-              <p className="text-zinc-500">아직 리뷰가 없습니다. 곧 업로드됩니다!</p>
+              <p className="text-zinc-500">아직 가이드가 없습니다. 곧 업로드됩니다!</p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -247,7 +247,7 @@ export default async function HomePage() {
               href="/blog"
               className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/60 bg-zinc-900/40 px-6 py-3 text-sm font-medium text-zinc-300 transition hover:border-amber-500/40 hover:text-amber-300"
             >
-              전체 리뷰 보기
+              전체 추천 보기
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
@@ -259,12 +259,12 @@ export default async function HomePage() {
         <div className="mx-auto max-w-5xl space-y-4 text-center">
           <p className="text-xs text-zinc-600 leading-relaxed max-w-2xl mx-auto">
             이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.<br />
-            구매자에게는 추가 비용이 발생하지 않으며, 추천 상품은 실제 사용 경험을 바탕으로 선정됩니다.
+            구매자에게는 추가 비용이 발생하지 않으며, 추천 상품은 쿠팡 실구매자 평점·리뷰 데이터를 기반으로 선정됩니다.
           </p>
           <div className="flex items-center justify-center gap-6 text-xs text-zinc-700">
             <Link href="/privacy" className="hover:text-zinc-400 transition-colors">개인정보처리방침</Link>
             <Link href="/terms"   className="hover:text-zinc-400 transition-colors">이용약관</Link>
-            <Link href="/blog"    className="hover:text-zinc-400 transition-colors">전체 리뷰</Link>
+            <Link href="/blog"    className="hover:text-zinc-400 transition-colors">전체 추천</Link>
           </div>
           <p className="text-xs text-zinc-800">© {new Date().getFullYear()} Thive Lab. All rights reserved.</p>
         </div>

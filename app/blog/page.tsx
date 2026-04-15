@@ -90,13 +90,13 @@ function ReviewListInner() {
         <header className="mb-10 space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800/80 bg-zinc-900/50 px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-zinc-400">
             <SlidersHorizontal className="h-3.5 w-3.5 text-amber-400" />
-            <span>Thive Lab · 전체 리뷰</span>
+            <span>Thive Lab · 추천 가이드</span>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-            솔직한 제품 리뷰
+            카테고리별 추천 가이드
           </h1>
           <p className="max-w-xl text-sm text-zinc-400 leading-relaxed">
-            직접 써보고 쓴 리뷰만 올립니다. 쿠팡 파트너스 링크가 포함될 수 있어요.
+            쿠팡 실구매자 평점·리뷰 데이터를 분석해 가성비 좋은 상품을 추천합니다.
           </p>
         </header>
 
@@ -116,13 +116,13 @@ function ReviewListInner() {
 
         {/* 결과 수 */}
         <p className="mb-5 text-xs text-zinc-600">
-          {loading ? "불러오는 중..." : `${posts.length}개의 리뷰`}
+          {loading ? "불러오는 중..." : `${posts.length}개의 추천 가이드`}
         </p>
 
         {/* 포스트 목록 */}
         {!loading && posts.length === 0 ? (
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 px-8 py-16 text-center">
-            <p className="text-zinc-500">이 카테고리의 리뷰가 없습니다.</p>
+            <p className="text-zinc-500">이 카테고리의 추천 가이드가 없습니다.</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -188,7 +188,7 @@ function ReviewListInner() {
 
         {/* 파트너스 고지 */}
         <p className="mt-12 text-center text-xs text-zinc-700 leading-relaxed">
-          이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.
+          이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다. 추천 상품은 쿠팡 실구매자 데이터를 기반으로 선정됩니다.
         </p>
       </div>
     </div>
