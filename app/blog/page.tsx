@@ -135,6 +135,7 @@ function ReviewListInner() {
                 {/* 상품 이미지 */}
                 {post.product_image && (
                   <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-800/50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={post.product_image}
                       alt={post.title}

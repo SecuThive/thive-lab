@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowUpRight,
   Flame,
@@ -318,11 +319,12 @@ function PostCard({ post }: { post: RecentPost }) {
       {/* 상품 이미지 */}
       {post.product_image && (
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-800/50">
-          <img
+          <Image
             src={post.product_image}
             alt={post.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            fill
+            unoptimized
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
           {post.affiliate_url && (
             <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-black">

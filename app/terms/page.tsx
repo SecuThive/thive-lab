@@ -53,7 +53,7 @@ export default function TermsPage() {
               제1조 (목적)
             </h2>
             <p>
-              본 약관은 Thive Lab(이하 "사이트")이 제공하는 서비스를 이용함에 있어
+              본 약관은 Thive Lab(이하 &ldquo;사이트&rdquo;)이 제공하는 서비스를 이용함에 있어
               이용자의 권리·의무 및 책임 사항을 규정함을 목적으로 합니다.
             </p>
           </section>
