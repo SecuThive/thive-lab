@@ -52,14 +52,23 @@ async function getRelatedPosts(category: string | null, currentSlug: string): Pr
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const post = await getPost(params.slug);
-  if (!post) return { title: "Not Found" };
+  if (!post) return { title: "Not Found", robots: { index: false, follow: false } };
+  const canonical = `https://thivelab.com/blog/${params.slug}`;
   return {
     title: `${post.title} | Thive Lab 리뷰`,
     description: post.summary ?? undefined,
+    alternates: { canonical },
     openGraph: {
       title: post.title,
       description: post.summary ?? undefined,
+      url: canonical,
+      type: "article",
       images: post.product_image ? [post.product_image] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.summary ?? undefined,
     },
   };
 }
@@ -94,8 +103,30 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     ? post.content_html
     : `<pre class="whitespace-pre-wrap text-sm text-zinc-300">${post.content}</pre>`;
 
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.summary ?? undefined,
+    image: post.product_image ?? undefined,
+    datePublished: post.created_at,
+    author: { "@type": "Organization", name: "Thive Lab", url: "https://thivelab.com" },
+    publisher: {
+      "@type": "Organization",
+      name: "Thive Lab",
+      logo: { "@type": "ImageObject", url: "https://thivelab.com/icon.png" },
+    },
+    mainEntityOfPage: `https://thivelab.com/blog/${post.slug}`,
+    articleSection: post.category ?? undefined,
+    keywords: post.tags?.join(", ") || undefined,
+  };
+
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
       {/* 헤더 글로우 */}
       <div
         aria-hidden

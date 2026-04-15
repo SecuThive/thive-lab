@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ShoppingCart, ExternalLink } from "lucide-react";
+import { Star, ShoppingCart, ExternalLink, Flame } from "lucide-react";
 
 export type Product = {
   id: number;
@@ -56,7 +56,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* 배지 */}
         <div className="absolute left-3 top-3 flex flex-col gap-1">
           {product.is_hot && (
-            <span className="badge-hot">🔥 HOT</span>
+            <span className="badge-hot inline-flex items-center gap-1"><Flame className="h-3 w-3" /> HOT</span>
           )}
           {product.discount_percent && product.discount_percent > 0 && (
             <span className="badge-discount">-{product.discount_percent}%</span>

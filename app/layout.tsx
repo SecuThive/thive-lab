@@ -54,6 +54,25 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Thive Lab",
+    url: "https://thivelab.com",
+    description: "실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다.",
+    inLanguage: "ko-KR",
+    publisher: {
+      "@type": "Organization",
+      name: "Thive Lab",
+      url: "https://thivelab.com",
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://thivelab.com/blog?category={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="ko" className="bg-zinc-950">
       <head>
@@ -62,6 +81,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/rss+xml"
           title="Thive Lab RSS"
           href="/rss.xml"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <AdSenseScript />
         <GoogleAnalytics />

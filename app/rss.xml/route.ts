@@ -2,9 +2,8 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   const baseUrl = "https://thivelab.com";
-  
-  // 프로젝트와 빌드 로그 가져오기
-  const [projectsResult, buildLogResult] = await Promise.all([
+
+  const [projectsResult, buildLogResult, postsResult] = await Promise.all([
     supabase
       .from("projects")
       .select("*")
@@ -16,12 +15,31 @@ export async function GET() {
       .eq("is_active", true)
       .order("display_order", { ascending: true })
       .limit(10),
+    supabase
+      .from("blog_posts")
+      .select("id, slug, title, summary, category, created_at")
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
 
   const projects = projectsResult.data || [];
   const buildLogs = buildLogResult.data || [];
+  const posts = postsResult.data || [];
 
-  // RSS 아이템 생성
+  // 블로그 포스트 아이템 (핵심 콘텐츠)
+  const postItems = posts.map((post) => `
+    <item>
+      <title>${escapeXml(post.title)}</title>
+      <description>${escapeXml(post.summary ?? post.title)}</description>
+      <link>${baseUrl}/blog/${post.slug}</link>
+      <guid isPermaLink="true">${baseUrl}/blog/${post.slug}</guid>
+      <pubDate>${new Date(post.created_at).toUTCString()}</pubDate>
+      <category>${escapeXml(post.category ?? "리뷰")}</category>
+    </item>
+  `).join("");
+
+  // 프로젝트 아이템
   const projectItems = projects.map((project) => `
     <item>
       <title>${escapeXml(project.name)}</title>
@@ -47,10 +65,10 @@ export async function GET() {
   const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Thive Lab - Automation Tools &amp; Updates</title>
+    <title>Thive Lab — 쿠팡 파트너스 추천 &amp; 상품 리뷰</title>
     <link>${baseUrl}</link>
-    <description>Stay updated with Thive Lab's latest automation tools, product launches, and build updates.</description>
-    <language>en-us</language>
+    <description>실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다. 쿠팡 파트너스 추천 상품을 확인하세요.</description>
+    <language>ko</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
     <image>
@@ -58,6 +76,7 @@ export async function GET() {
       <title>Thive Lab</title>
       <link>${baseUrl}</link>
     </image>
+    ${postItems}
     ${projectItems}
     ${buildLogItems}
   </channel>

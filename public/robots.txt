@@ -1,6 +1,8 @@
 # robots.txt
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
 
 # Sitemaps
 Sitemap: https://thivelab.com/sitemap.xml

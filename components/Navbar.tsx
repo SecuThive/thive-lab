@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Flame, Grid3X3, FileText, Search } from "lucide-react";
+import { ShoppingBag, Flame, Grid3X3, FileText, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const CATEGORIES = [
@@ -19,6 +19,7 @@ const CATEGORIES = [
 export default function Navbar() {
   const pathname = usePathname();
   const [catOpen, setCatOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname?.startsWith(href);
@@ -39,19 +40,18 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* 네비게이션 링크 */}
+          {/* 데스크톱 네비게이션 */}
           <div className="hidden items-center gap-1 md:flex">
-            {/* 인기상품 */}
             <Link
-              href="/popular"
+              href="/blog?category=전체"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/popular")
+                isActive("/blog") && !pathname?.includes("/blog/")
                   ? "bg-amber-500/10 text-amber-300"
                   : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
               }`}
             >
               <Flame className="h-3.5 w-3.5" />
-              인기상품
+              전체 리뷰
             </Link>
 
             {/* 카테고리 드롭다운 */}
@@ -86,25 +86,16 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-
-            {/* 전체 리뷰 */}
-            <Link
-              href="/blog"
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                isActive("/blog")
-                  ? "bg-amber-500/10 text-amber-300"
-                  : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              전체 리뷰
-            </Link>
           </div>
 
-          {/* 우측: 검색 + CTA */}
+          {/* 우측: 모바일 메뉴 + CTA */}
           <div className="flex items-center gap-2">
-            <button className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
-              <Search className="h-4 w-4" />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors md:hidden"
+              aria-label="메뉴 열기"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             <Link
               href="/blog"
@@ -118,18 +109,44 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 모바일 카테고리 바 */}
-      <div className="flex gap-2 overflow-x-auto border-t border-zinc-800/40 px-4 py-2 md:hidden">
-        {CATEGORIES.map((c) => (
-          <Link
-            key={c.slug}
-            href={`/blog?category=${encodeURIComponent(c.label)}`}
-            className="shrink-0 rounded-full border border-zinc-700/60 bg-zinc-900/60 px-3 py-1 text-xs text-zinc-400 hover:border-amber-500/50 hover:text-amber-300 transition-colors"
-          >
-            {c.label}
-          </Link>
-        ))}
-      </div>
+      {/* 모바일 메뉴 */}
+      {mobileOpen && (
+        <div className="border-t border-zinc-800/40 bg-zinc-950 md:hidden">
+          <div className="mx-auto max-w-6xl px-4 py-4 space-y-1">
+            <Link
+              href="/blog"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-amber-300 transition-colors"
+            >
+              <FileText className="h-4 w-4" />
+              전체 리뷰
+            </Link>
+            <div className="px-4 py-2">
+              <p className="mb-2 text-xs uppercase tracking-widest text-zinc-600">카테고리</p>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/blog?category=${encodeURIComponent(c.label)}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-full border border-zinc-700/60 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400 hover:border-amber-500/50 hover:text-amber-300 transition-colors"
+                  >
+                    {c.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/blog"
+              onClick={() => setMobileOpen(false)}
+              className="mx-4 mt-2 flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              추천 보러가기
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
