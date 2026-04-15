@@ -55,20 +55,22 @@ class CoupangProduct:
 
 # ── HMAC 인증 헤더 생성 ───────────────────────────────────────────────────────
 
-def _make_auth_header(method: str, path_with_query: str,
+def _make_auth_header(method: str, url: str,
                       access_key: str, secret_key: str) -> str:
     """
     쿠팡 파트너스 HMAC-SHA256 인증 헤더 생성.
     공식 문서: https://developers.coupang.com/hc/ko/articles/360033828593
 
-    signed-date 포맷: yyMMddTHHmmssZ (UTC)
-    message 포맷: {signed-date}\n{METHOD}\n{path?query}\n
+    공식 Python 예제와 동일한 로직:
+      path, *query = url.split("?")
+      message = datetime + method + path + query (구분자 없이 연결, ? 제외)
     """
-    dt = datetime.datetime.utcnow().strftime('%y%m%dT%H%M%SZ')
-    message = f"{dt}\n{method}\n{path_with_query}\n"
+    path, *query_parts = url.split("?")
+    dt = datetime.datetime.utcnow().strftime('%y%m%d') + 'T' + datetime.datetime.utcnow().strftime('%H%M%S') + 'Z'
+    message = dt + method + path + (query_parts[0] if query_parts else "")
     signature = hmac.new(
-        secret_key.encode('utf-8'),
-        message.encode('utf-8'),
+        bytes(secret_key, "utf-8"),
+        message.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
     return (
