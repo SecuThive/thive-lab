@@ -14,6 +14,7 @@ import datetime
 import hashlib
 import hmac
 import logging
+import time
 import urllib.parse
 from dataclasses import dataclass, field
 
@@ -113,56 +114,72 @@ def search_products(
     auth            = _make_auth_header("GET", path_with_query, access_key, secret_key)
     url             = f"{COUPANG_BASE}{path_with_query}"
 
-    try:
-        resp = requests.get(
-            url,
-            headers={
-                "Authorization": auth,
-                "Content-Type":  "application/json;charset=UTF-8",
-            },
-            timeout=15,
-        )
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # 재시도 시 인증 헤더 재생성 (타임스탬프 갱신)
+            if attempt > 0:
+                auth = _make_auth_header("GET", path_with_query, access_key, secret_key)
 
-        if resp.status_code == 400:
-            log.warning("[쿠팡API] 잘못된 요청 ('%s'): %s", keyword, resp.text[:300])
+            resp = requests.get(
+                url,
+                headers={
+                    "Authorization": auth,
+                    "Content-Type":  "application/json;charset=UTF-8",
+                },
+                timeout=15,
+            )
+
+            if resp.status_code == 429:
+                wait = 2 ** attempt  # 1s, 2s, 4s 지수 백오프
+                log.warning("[쿠팡API] 429 Rate Limited ('%s') — %ds 후 재시도 (%d/%d)",
+                            keyword, wait, attempt + 1, max_retries)
+                time.sleep(wait)
+                continue
+
+            if resp.status_code == 400:
+                log.warning("[쿠팡API] 잘못된 요청 ('%s'): %s", keyword, resp.text[:300])
+                return []
+            if resp.status_code == 401:
+                log.error("[쿠팡API] 인증 실패 — Access/Secret Key를 확인하세요")
+                return []
+            resp.raise_for_status()
+
+            body     = resp.json()
+            raw_list = body.get("data", {}).get("productData", [])
+            products: list[CoupangProduct] = []
+
+            for item in raw_list:
+                try:
+                    sale_price = int(item.get("productPrice", 0) or 0)
+                    orig_price = int(item.get("originalPrice", sale_price) or sale_price)
+                    products.append(CoupangProduct(
+                        product_name   = (item.get("productName") or "").strip(),
+                        product_price  = sale_price,
+                        original_price = orig_price,
+                        discount_rate  = int(item.get("discountRate", 0) or 0),
+                        rating         = float(item.get("ratingValue", 0.0) or 0.0),
+                        rating_count   = int(item.get("ratingCount", 0) or 0),
+                        product_image  = item.get("productImage", ""),
+                        product_url    = item.get("productUrl", ""),
+                        is_rocket      = bool(item.get("isRocket", False)),
+                    ))
+                except Exception as e:
+                    log.debug("[쿠팡API] 상품 파싱 스킵: %s", e)
+
+            log.info("[쿠팡API] '%s' → %d개 상품 수집", keyword, len(products))
+            return products
+
+        except requests.HTTPError as e:
+            log.warning("[쿠팡API] HTTP %s ('%s'): %s",
+                        e.response.status_code, keyword, e.response.text[:200])
             return []
-        if resp.status_code == 401:
-            log.error("[쿠팡API] 인증 실패 — Access/Secret Key를 확인하세요")
+        except Exception as e:
+            log.warning("[쿠팡API] 검색 실패 ('%s'): %s", keyword, e)
             return []
-        resp.raise_for_status()
 
-        body     = resp.json()
-        raw_list = body.get("data", {}).get("productData", [])
-        products: list[CoupangProduct] = []
-
-        for item in raw_list:
-            try:
-                sale_price = int(item.get("productPrice", 0) or 0)
-                orig_price = int(item.get("originalPrice", sale_price) or sale_price)
-                products.append(CoupangProduct(
-                    product_name   = (item.get("productName") or "").strip(),
-                    product_price  = sale_price,
-                    original_price = orig_price,
-                    discount_rate  = int(item.get("discountRate", 0) or 0),
-                    rating         = float(item.get("ratingValue", 0.0) or 0.0),
-                    rating_count   = int(item.get("ratingCount", 0) or 0),
-                    product_image  = item.get("productImage", ""),
-                    product_url    = item.get("productUrl", ""),
-                    is_rocket      = bool(item.get("isRocket", False)),
-                ))
-            except Exception as e:
-                log.debug("[쿠팡API] 상품 파싱 스킵: %s", e)
-
-        log.info("[쿠팡API] '%s' → %d개 상품 수집", keyword, len(products))
-        return products
-
-    except requests.HTTPError as e:
-        log.warning("[쿠팡API] HTTP %s ('%s'): %s",
-                    e.response.status_code, keyword, e.response.text[:200])
-        return []
-    except Exception as e:
-        log.warning("[쿠팡API] 검색 실패 ('%s'): %s", keyword, e)
-        return []
+    log.warning("[쿠팡API] 재시도 %d회 초과 ('%s') — 빈 결과 반환", max_retries, keyword)
+    return []
 
 
 # ── LLM 프롬프트용 상품 텍스트 포맷 ──────────────────────────────────────────

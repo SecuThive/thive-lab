@@ -82,6 +82,8 @@ MODEL_PRIORITY = [
 
 STATE_FILE   = Path(__file__).parent / ".pipeline_state.json"
 HISTORY_FILE = Path(__file__).parent / ".blog_history.json"
+COUPANG_API_LOG = Path(__file__).parent / ".coupang_api_log.json"
+COUPANG_HOURLY_LIMIT = 10
 HISTORY_KEEP = 30
 MIN_QUALITY_SCORE = 65
 MAX_WRITE_RETRY   = 2
@@ -378,6 +380,36 @@ def _stage_fail(name: str, reason: str) -> None:
 # Stage 0 · 쿠팡 파트너스 상품 수집
 # ══════════════════════════════════════════════════════════════
 
+def _load_coupang_api_log() -> list[float]:
+    """쿠팡 API 호출 타임스탬프 로그 로드."""
+    try:
+        data = json.loads(COUPANG_API_LOG.read_text("utf-8"))
+        return data.get("timestamps", [])
+    except Exception:
+        return []
+
+def _save_coupang_api_log(timestamps: list[float]) -> None:
+    """쿠팡 API 호출 타임스탬프 로그 저장 (최근 1시간 내 기록만 유지)."""
+    cutoff = time.time() - 3600
+    recent = [ts for ts in timestamps if ts > cutoff]
+    COUPANG_API_LOG.write_text(
+        json.dumps({"timestamps": recent}, ensure_ascii=False, indent=2), "utf-8"
+    )
+
+def _check_coupang_rate_limit() -> bool:
+    """시간당 호출 횟수가 제한 이내인지 확인. True면 호출 가능."""
+    timestamps = _load_coupang_api_log()
+    cutoff = time.time() - 3600
+    recent = [ts for ts in timestamps if ts > cutoff]
+    return len(recent) < COUPANG_HOURLY_LIMIT
+
+def _record_coupang_api_call() -> None:
+    """성공한 API 호출 타임스탬프 기록."""
+    timestamps = _load_coupang_api_log()
+    timestamps.append(time.time())
+    _save_coupang_api_log(timestamps)
+
+
 def stage_products(topic: dict) -> list:
     """쿠팡 API로 실제 상품 데이터 수집. API 미설정 또는 실패 시 빈 리스트 반환."""
     if not _COUPANG_AVAILABLE:
@@ -391,6 +423,12 @@ def stage_products(topic: dict) -> list:
     t0 = _stage_start("products")
     log.info("  쿠팡 검색 키워드: %s", keyword)
 
+    # ── Rate Limit 체크 ──
+    if not _check_coupang_rate_limit():
+        log.warning("쿠팡 API 시간당 10회 제한 초과 — 캐시 사용")
+        _stage_done("products", t0, extra="rate_limited")
+        return []
+
     products = search_products(
         keyword=keyword,
         access_key=COUPANG_ACCESS_KEY,
@@ -398,6 +436,10 @@ def stage_products(topic: dict) -> list:
         limit=5,
         sub_id="thivelab",
     )
+
+    if products:
+        _record_coupang_api_call()
+
     log.info("  수집된 상품 수: %d", len(products))
     _stage_done("products", t0, extra=f"count={len(products)}")
     return products
@@ -460,12 +502,14 @@ def stage_outline(topic: dict, analysis: dict, model: str) -> str:
 구매 고민: {analysis.get('purchase_pain', '')}
 비교 기준: {analysis.get('review_focus', '')}
 
-아래 규칙으로 추천 가이드 아웃라인을 작성하세요:
-- H2 섹션 4~5개 (예: 이런 분께 추천, 선택 기준 체크리스트, TOP 상품 비교, 가격대별 정리, 구매 전 체크포인트)
+"사용자의 고민 제시 → 해결책/정보 제공 → 쿠팡 상품 추천" 흐름으로 아웃라인을 작성하세요:
+- H2 섹션 1: [문제 제기] 독자의 핵심 고민을 Q&A 형태로 시작 (예: "Q: 에어프라이어, 10만원 이하로 괜찮은 게 있을까?")
+- H2 섹션 2: [정보 제공] 선택 기준/체크리스트/비교 기준 안내
+- H2 섹션 3: [상품 추천] 수집된 쿠팡 상품 비교표 (모든 상품 개별 소개)
+- H2 섹션 4: [가격대별 정리] 예산별 추천
+- H2 섹션 5: [최종 가이드] 추천 대상 / 패스 대상
 - 각 섹션에 구체적 내용 힌트 불릿 3개
-- 반드시 비교표 또는 TOP N 형식의 섹션 1개 포함
-- 마지막 섹션은 "이런 분께 추천 / 이런 분은 패스" 형태로
-- 가격대 정보 섹션 1개 포함 (예: 3만원 이하 / 5~10만원대 / 10만원 이상)"""
+- 반드시 비교표 또는 TOP N 형식의 섹션 1개 포함"""
     outline = _chat(model, system, user, temperature=0.6)
     sections = outline.count("## ")
     log.info("  섹션 수: %d", sections)
@@ -493,7 +537,9 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
         f"당신은 {analysis.get('tone', '친절한 큐레이터')} 스타일의 한국 쇼핑 추천 가이드 작성자입니다. "
         "쿠팡 실구매자 평점·리뷰 수·스펙·가격 데이터를 분석해 비교 가이드를 작성합니다. "
         "절대 금지: '직접 써봤다', '사용해봤다', '구매했다' 등 1인칭 사용 경험 표현. "
-        "대신 '쿠팡 구매자 리뷰에 따르면', '스펙을 비교해 보면', '평점 데이터 기준으로' 같은 객관적 표현을 사용합니다."
+        "대신 '쿠팡 구매자 리뷰에 따르면', '스펙을 비교해 보면', '평점 데이터 기준으로' 같은 객관적 표현을 사용합니다. "
+        "도입부 첫 문단은 반드시 'Q: [핵심 질문]' + 'A: [즉답 1~2문장]' 형태로 시작하세요. "
+        "AI 검색엔진이 이 즉답을 인용할 수 있도록, 질문에 대한 명확하고 구체적인 답변을 먼저 제시한 뒤 상세 설명으로 이어가세요."
     )
     user = f"""추천 가이드 주제: {topic['title']}
 카테고리: {topic['category']}
@@ -505,7 +551,8 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
 
 작성 규칙:
 - 총 600~900 단어
-- 첫 문단에서 이 가이드를 읽어야 하는 이유를 바로 말할 것
+- 도입부: Q&A 즉답 구조 필수 (예: "Q: 민감 피부에 좋은 세탁세제는? A: 쿠팡 데이터 기준, 무향·무형광 성분의 [제품명]이 평점 4.5 이상으로 가장 높은 만족도를 보입니다.")
+- 마크다운 형식 필수 — 제목(##), 리스트(-), 테이블(|), 강조(**) 활용
 - 구체적 수치 포함 (가격대, 용량, 무게, 쿠팡 평점, 리뷰 수 등)
 - 수집된 상품 {len(products) if products else 0}개를 각각 개별 소개 (제품명, 가격, 핵심 특징, 추천 대상)
 - "이런 분께 추천 / 이런 분은 패스" 형태로 구매 가이드 제공

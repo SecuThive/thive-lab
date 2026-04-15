@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Star, ShoppingCart, ExternalLink, Flame } from "lucide-react";
+import { trackAffiliateLinkClick } from "@/lib/analytics";
 
 export type Product = {
   id: number;
@@ -120,7 +121,14 @@ export default function ProductCard({ product }: { product: Product }) {
             target="_blank"
             rel="noopener noreferrer sponsored"
             className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-black shadow-sm shadow-amber-500/20 transition hover:bg-amber-400 active:scale-95"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              trackAffiliateLinkClick({
+                productName: product.name,
+                productPrice: product.sale_price ?? product.original_price ?? undefined,
+                category: product.category ?? undefined,
+              });
+            }}
           >
             <ExternalLink className="h-3 w-3" />
             쿠팡에서 보기
