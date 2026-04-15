@@ -67,7 +67,7 @@ export async function GET() {
   <channel>
     <title>Thive Lab — 쿠팡 파트너스 추천 &amp; 상품 리뷰</title>
     <link>${baseUrl}</link>
-    <description>실생활에 도움이 되는 제품을 직접 사용하고 솔직하게 리뷰합니다. 쿠팡 파트너스 추천 상품을 확인하세요.</description>
+    <description>쿠팡 실구매자 데이터 기반 카테고리별 가성비 상품 추천 가이드. 비교표와 체크리스트로 쉽게 골라보세요.</description>
     <language>ko</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>

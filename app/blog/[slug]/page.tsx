@@ -141,7 +141,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           className="mb-8 inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
         >
           <ArrowLeft className="h-4 w-4" />
-          전체 리뷰
+          추천 가이드
         </Link>
 
         {/* ── 포스트 헤더 ───────────────────────────────────────────────── */}
@@ -284,7 +284,7 @@ function AffiliateCTA({
           className="btn-coupang mx-auto justify-center text-sm"
         >
           <ExternalLink className="h-4 w-4" />
-          쿠팡에서 구매하기
+          쿠팡에서 확인하기
         </a>
       </div>
     );
@@ -295,7 +295,7 @@ function AffiliateCTA({
       <div className="flex items-center gap-3">
         <ShoppingBag className="h-5 w-5 text-amber-400 shrink-0" />
         <div>
-          <p className="text-xs font-semibold text-zinc-200">쿠팡에서 구매 가능</p>
+          <p className="text-xs font-semibold text-zinc-200">쿠팡에서 확인 가능</p>
           <p className="text-xs text-zinc-500 line-clamp-1">{title}</p>
         </div>
       </div>
@@ -306,7 +306,7 @@ function AffiliateCTA({
         className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-black shadow-sm shadow-amber-500/20 transition hover:bg-amber-400 active:scale-95"
       >
         <ExternalLink className="h-3 w-3" />
-        구매하기
+        쿠팡에서 보기
       </a>
     </div>
   );

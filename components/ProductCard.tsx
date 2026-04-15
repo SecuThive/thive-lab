@@ -123,7 +123,7 @@ export default function ProductCard({ product }: { product: Product }) {
             onClick={(e) => e.stopPropagation()}
           >
             <ExternalLink className="h-3 w-3" />
-            쿠팡 구매
+            쿠팡에서 보기
           </a>
         </div>
       </div>
