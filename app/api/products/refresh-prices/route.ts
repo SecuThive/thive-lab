@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { createClient } from "@supabase/supabase-js";
 
 // ── 쿠팡 파트너스 HMAC-SHA256 인증 헤더 생성 ─────────────────────────────────
 
@@ -88,6 +88,13 @@ export async function POST(req: NextRequest) {
   if (secret !== process.env.REVALIDATE_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // 런타임에 클라이언트 생성 (빌드 타임 env 누락 방지)
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
 
   // search_keyword 가 있는 상품 조회
   const { data: products, error: fetchErr } = await supabaseAdmin
