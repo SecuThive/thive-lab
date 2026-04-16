@@ -114,14 +114,13 @@ export default function Navbar() {
                   <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-200 ${catOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                {/* 드롭다운 패널 */}
-                <div
-                  className={`absolute left-1/2 top-full w-[320px] -translate-x-1/2 transition-all duration-200 ${
+                {/* 드롭다운 패널 — pt-2로 버튼과 틈새 없이 연결 */}
+                <div className="absolute left-1/2 top-full w-[320px] -translate-x-1/2 pt-2">
+                  <div className={`transition-all duration-200 ${
                     catOpen
-                      ? "pointer-events-auto translate-y-2 opacity-100"
-                      : "pointer-events-none translate-y-0.5 opacity-0"
-                  }`}
-                >
+                      ? "pointer-events-auto translate-y-0 opacity-100"
+                      : "pointer-events-none -translate-y-1 opacity-0"
+                  }`}>
                   <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.10)]">
                     {/* 헤더 */}
                     <div className="border-b border-gray-100 px-4 py-3">
@@ -152,6 +151,7 @@ export default function Navbar() {
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
