@@ -188,25 +188,39 @@ def _save_history(key: str) -> None:
         pass
 
 def _fetch_published_keywords() -> set[str]:
-    """DB에 이미 발행된 blog_posts의 search_keyword 목록을 조회한다."""
+    """
+    DB에 이미 발행된 blog_posts의 search_keyword 목록을 조회한다.
+
+    - search_keyword 컬럼에서 직접 수집
+    - topic_key 컬럼 기반으로도 TOPICS 매핑 → 컬럼 추가 전 기존 레코드 보완
+    """
     if not SUPABASE_URL or not SUPABASE_KEY:
         return set()
+    keywords: set[str] = set()
     try:
         resp = requests.get(
             f"{SUPABASE_URL}/rest/v1/blog_posts",
-            params={"select": "search_keyword", "limit": 1000},
+            params={"select": "search_keyword,topic_key", "limit": 1000},
             headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
             timeout=10,
         )
         if resp.ok:
-            return {
-                r["search_keyword"].strip()
-                for r in resp.json()
-                if r.get("search_keyword")
-            }
-    except Exception:
-        pass
-    return set()
+            # topic_key → search_keyword 역매핑 (기존 레코드 대응)
+            key_to_kw = {t["key"]: t.get("search_keyword", "") for t in TOPICS}
+            for r in resp.json():
+                kw = (r.get("search_keyword") or "").strip()
+                if kw:
+                    keywords.add(kw)
+                # topic_key 로도 보완
+                tk = (r.get("topic_key") or "").strip()
+                if tk and tk in key_to_kw and key_to_kw[tk]:
+                    keywords.add(key_to_kw[tk])
+            log.info("[DB] 발행된 키워드 %d개 조회 완료", len(keywords))
+        else:
+            log.warning("[DB] _fetch_published_keywords 실패: %s %s", resp.status_code, resp.text[:100])
+    except Exception as e:
+        log.warning("[DB] _fetch_published_keywords 예외: %s", e)
+    return keywords
 
 def pick_topic(category_filter: Optional[str] = None) -> dict:
     """
@@ -230,15 +244,27 @@ def pick_topic(category_filter: Optional[str] = None) -> dict:
             trend_topics = [t for t in trend_topics if t["key"] not in _SESSION_USED_KEYS]
             if trend_topics:
                 chosen = trend_topics[0]   # 관심도 1위
-                _SESSION_USED_KEYS.add(chosen["key"])
-                log.info(
-                    "[pick_topic] 🔥 트렌드 선택: %s [%s] score=%s%s",
-                    chosen["search_keyword"],
-                    chosen["category"],
-                    chosen.get("trend_score", "-"),
-                    " (동적)" if chosen.get("dynamic") else "",
-                )
-                return chosen
+                # 최종 안전망: 혹시라도 이미 발행된 키워드면 건너뜀
+                if chosen.get("search_keyword", "") in db_keywords:
+                    log.warning(
+                        "[pick_topic] 트렌드 1위 '%s' 가 DB에 이미 발행됨 — 다음 후보 탐색",
+                        chosen.get("search_keyword"),
+                    )
+                    trend_topics = [
+                        t for t in trend_topics
+                        if t.get("search_keyword", "") not in db_keywords
+                    ]
+                if trend_topics:
+                    chosen = trend_topics[0]
+                    _SESSION_USED_KEYS.add(chosen["key"])
+                    log.info(
+                        "[pick_topic] 🔥 트렌드 선택: %s [%s] score=%s%s",
+                        chosen["search_keyword"],
+                        chosen["category"],
+                        chosen.get("trend_score", "-"),
+                        " (동적)" if chosen.get("dynamic") else "",
+                    )
+                    return chosen
             else:
                 log.info("[pick_topic] 트렌드 후보 없음 — 고정 TOPICS 폴백")
         except Exception as e:
@@ -1453,17 +1479,18 @@ def assemble(topic: dict, content: str, seo: dict,
 
 def save_to_supabase(topic: dict, assembled: dict, slug: str, quality_score: int) -> None:
     record = {
-        "slug":          slug,
-        "title":         assembled["title"],
-        "summary":       assembled["summary"],
-        "content":       assembled["content"],
-        "content_html":  assembled["content_html"],
-        "tags":          assembled["tags"],
-        "category":      assembled["category"],
-        "status":        "published",
-        "source":        "auto",
-        "topic_key":     topic["key"],
-        "created_at":    datetime.utcnow().isoformat(),
+        "slug":           slug,
+        "title":          assembled["title"],
+        "summary":        assembled["summary"],
+        "content":        assembled["content"],
+        "content_html":   assembled["content_html"],
+        "tags":           assembled["tags"],
+        "category":       assembled["category"],
+        "status":         "published",
+        "source":         "auto",
+        "topic_key":      topic["key"],
+        "search_keyword": topic.get("search_keyword", ""),   # 중복 발행 방지용
+        "created_at":     datetime.utcnow().isoformat(),
     }
     if assembled.get("affiliate_url"):
         record["affiliate_url"] = assembled["affiliate_url"]
