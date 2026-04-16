@@ -19,10 +19,12 @@ import {
   Activity,
   FolderOpen,
   Clock,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import StatusTab from "./tabs/StatusTab";
 import CronTab from "./tabs/CronTab";
+import MetricsTab from "./tabs/MetricsTab";
 
 const ICON_OPTIONS = {
   Radar: <Radar className="h-5 w-5" />,
@@ -70,7 +72,7 @@ export default function AdminPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"status" | "projects" | "cron">("status");
+  const [activeTab, setActiveTab] = useState<"status" | "projects" | "cron" | "metrics">("status");
 
   useEffect(() => {
     const token = sessionStorage.getItem("admin_token");
@@ -256,6 +258,7 @@ export default function AdminPage() {
         <div className="mb-8 flex gap-1 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-1">
           {([
             { id: "status" as const, label: "서비스 현황", icon: <Activity className="h-4 w-4" /> },
+            { id: "metrics" as const, label: "성과 분석", icon: <TrendingUp className="h-4 w-4" /> },
             { id: "projects" as const, label: "프로젝트 관리", icon: <FolderOpen className="h-4 w-4" /> },
             { id: "cron" as const, label: "크론 설정", icon: <Clock className="h-4 w-4" /> },
           ]).map((tab) => (
@@ -276,6 +279,7 @@ export default function AdminPage() {
 
         {/* 탭 콘텐츠 */}
         {activeTab === "status" && <StatusTab />}
+        {activeTab === "metrics" && <MetricsTab />}
         {activeTab === "cron" && <CronTab />}
 
         {/* Projects Table — 프로젝트 관리 탭 */}

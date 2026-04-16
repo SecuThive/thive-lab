@@ -51,11 +51,7 @@ export default function BlogContent({
   }, [affiliateUrl]);
 
   const handleCTAClick = (position: string) => {
-    trackAffiliateLinkClick({ productName: title, category, slug });
-    // GA4 이벤트 (선택)
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "cta_click", { position, title });
-    }
+    trackAffiliateLinkClick({ productName: title, category, slug, position });
   };
 
   return (
@@ -167,8 +163,15 @@ export default function BlogContent({
               );
             },
             img: ({ src, alt }) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={src} alt={alt ?? ""} className="rounded-2xl max-w-full my-6 border border-gray-100 shadow-sm" loading="lazy" />
+              <div className="my-5 flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={alt ?? ""}
+                  className="rounded-2xl max-h-64 max-w-full object-contain border border-gray-100 shadow-sm bg-gray-50"
+                  loading="lazy"
+                />
+              </div>
             ),
             blockquote: ({ children }) => (
               <blockquote className="my-6 border-l-4 border-amber-400 bg-amber-50 rounded-r-xl px-5 py-4 text-gray-700 not-italic">

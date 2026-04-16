@@ -1,6 +1,7 @@
 /**
- * GA4 커스텀 이벤트 전송 유틸리티
- * 쿠팡 제휴 링크 클릭 추적용
+ * 제휴 링크 클릭 추적 유틸리티
+ * - GA4 커스텀 이벤트 전송
+ * - /api/click 엔드포인트로 DB 로그 저장 (카테고리별 성과 분석용)
  */
 
 declare global {
@@ -14,15 +15,31 @@ export function trackAffiliateLinkClick(params: {
   productPrice?: number;
   category?: string;
   slug?: string;
+  position?: string;
 }) {
-  if (typeof window === 'undefined' || !window.gtag) return;
+  // ── GA4 이벤트 ──────────────────────────────────────────────────
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "click_affiliate_link", {
+      event_category: "affiliate",
+      event_label: params.productName,
+      product_name: params.productName,
+      product_price: params.productPrice,
+      content_category: params.category,
+      page_slug: params.slug,
+      cta_position: params.position,
+    });
+  }
 
-  window.gtag('event', 'click_affiliate_link', {
-    event_category: 'affiliate',
-    event_label: params.productName,
-    product_name: params.productName,
-    product_price: params.productPrice,
-    content_category: params.category,
-    page_slug: params.slug,
-  });
+  // ── DB 로그 저장 (fire-and-forget) ──────────────────────────────
+  if (typeof window !== "undefined" && params.slug) {
+    fetch("/api/click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug: params.slug,
+        category: params.category ?? null,
+        position: params.position ?? null,
+      }),
+    }).catch(() => {});
+  }
 }
