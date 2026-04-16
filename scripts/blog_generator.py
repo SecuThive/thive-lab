@@ -1686,6 +1686,8 @@ def main() -> None:
     parser.add_argument("--category",      type=str,  default=None,
                         choices=SITE_CATEGORIES,
                         help="특정 카테고리만 생성")
+    parser.add_argument("--trend",          action="store_true",
+                        help="(기본값, 무시됨) 트렌드 우선 모드는 항상 활성")
     parser.add_argument("--no-trend",       action="store_true",
                         help="트렌드 무시하고 고정 TOPICS 에서만 선택")
     args = parser.parse_args()
