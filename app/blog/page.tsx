@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { ArrowUpRight, ShoppingBag, Tag, SlidersHorizontal, Clock, Newspaper, TrendingUp, Flame, Eye } from "lucide-react";
+import { ArrowUpRight, ShoppingBag, Tag, SlidersHorizontal, Clock, TrendingUp, Flame, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type BlogPost = {
@@ -19,13 +19,13 @@ type BlogPost = {
   product_image?: string | null;
 };
 
-type RecentPost = {
+type PopularPost = {
   id: number;
   slug: string;
   title: string;
   category: string | null;
-  cover_image_url: string | null;
-  created_at: string;
+  product_image: string | null;
+  view_count: number;
 };
 
 type SortKey = "latest" | "popular";
@@ -52,16 +52,13 @@ function catStyle(cat: string | null) {
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric", month: "short", day: "numeric",
 });
-const shortDateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  month: "short", day: "numeric",
-});
 
 function ReviewListInner() {
   const searchParams   = useSearchParams();
   const paramCategory  = searchParams?.get("category") ?? "전체";
 
   const [posts,          setPosts]          = useState<BlogPost[]>([]);
-  const [recentPosts,    setRecentPosts]    = useState<RecentPost[]>([]);
+  const [popularPosts,   setPopularPosts]   = useState<PopularPost[]>([]);
   const [loading,        setLoading]        = useState(true);
   const [activeCategory, setActiveCategory] = useState(
     CATEGORIES.includes(paramCategory) ? paramCategory : "전체"
@@ -92,14 +89,15 @@ function ReviewListInner() {
     });
   }, [activeCategory, sortKey]);
 
-  // 사이드바 최근 포스트
+  // 사이드바 인기 상품
   useEffect(() => {
     supabase
-      .from("posts")
-      .select("id, slug, title, category, cover_image_url, created_at")
-      .order("created_at", { ascending: false })
-      .limit(10)
-      .then(({ data }) => setRecentPosts((data ?? []) as RecentPost[]));
+      .from("blog_posts")
+      .select("id, slug, title, category, product_image, view_count")
+      .eq("status", "published")
+      .order("view_count", { ascending: false })
+      .limit(8)
+      .then(({ data }) => setPopularPosts((data ?? []) as PopularPost[]));
   }, []);
 
   return (
@@ -268,35 +266,51 @@ function ReviewListInner() {
           <aside className="hidden w-72 shrink-0 lg:block">
             <div className="sticky top-20 space-y-6">
 
-              {/* 최근 포스트 */}
-              {recentPosts.length > 0 && (
+              {/* 인기 상품 */}
+              {popularPosts.length > 0 && (
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-widest text-gray-400">
-                    <Newspaper className="h-3.5 w-3.5 text-amber-500" />
-                    최근 포스트
+                    <Flame className="h-3.5 w-3.5 text-amber-500" />
+                    인기 상품
                   </div>
-                  <div className="space-y-3">
-                    {recentPosts.map((post) => (
+                  <div className="space-y-2">
+                    {popularPosts.map((post, idx) => (
                       <Link
                         key={post.id}
                         href={`/blog/${post.slug}`}
-                        className="group flex gap-3 rounded-xl p-2 -mx-2 transition hover:bg-amber-50"
+                        className="group flex items-center gap-3 rounded-xl p-2 -mx-2 transition hover:bg-amber-50"
                       >
-                        {post.cover_image_url && (
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                        {/* 순위 */}
+                        <span className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black ${
+                          idx === 0 ? "bg-amber-500 text-black" :
+                          idx === 1 ? "bg-gray-400 text-white" :
+                          idx === 2 ? "bg-amber-800 text-white" :
+                                      "bg-gray-100 text-gray-500"
+                        }`}>
+                          {idx + 1}
+                        </span>
+                        {/* 썸네일 */}
+                        {post.product_image ? (
+                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={post.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            <img src={post.product_image} alt="" className="h-full w-full object-cover" loading="lazy" />
+                          </div>
+                        ) : (
+                          <div className="h-10 w-10 shrink-0 rounded-lg bg-amber-50 flex items-center justify-center">
+                            <ShoppingBag className="h-4 w-4 text-amber-400" />
                           </div>
                         )}
+                        {/* 제목 + 카테고리 */}
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-medium text-gray-700 line-clamp-2 leading-snug group-hover:text-amber-600 transition-colors">
                             {post.title}
                           </p>
-                          <div className="mt-1 flex items-center gap-2">
+                          <div className="mt-0.5 flex items-center gap-2">
                             {post.category && <span className="text-[10px] text-gray-400">{post.category}</span>}
-                            <time className="text-[10px] text-gray-300">
-                              {shortDateFormatter.format(new Date(post.created_at))}
-                            </time>
+                            <span className="flex items-center gap-0.5 text-[10px] text-gray-300">
+                              <Eye className="h-2.5 w-2.5" />
+                              {post.view_count.toLocaleString()}
+                            </span>
                           </div>
                         </div>
                       </Link>
