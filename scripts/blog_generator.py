@@ -623,14 +623,25 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
 - 글의 전반부(1~2단계)에서는 특정 상품명 언급하지 않고 기준만 제시
 - 글의 중후반부(3단계)에서 수집된 상품 {len(products) if products else 0}개를 비교표로 자연스럽게 등장
 - 각 상품 개별 섹션(### 제품명): 실제 제품명, 실제 가격, 핵심 스펙, 장단점, 적합한 사용자 기재
-- 각 상품 섹션 끝에 반드시 아래 형식으로 구매 버튼 삽입 (절대 raw URL만 쓰지 말 것):
-  [🛒 쿠팡에서 구매하기](실제 product_url)
-- 비교표(Table) "구매링크" 열에도 반드시 마크다운 링크 형식 사용:
-  [구매하러가기](실제 product_url)  ← 괄호 안에 실제 URL 필수
+{"- 각 상품 섹션 끝에 반드시 아래 형식으로 구매 버튼 삽입 (절대 raw URL만 쓰지 말 것):" if products else "- 상품 데이터가 없으므로 구매 링크·CTA 버튼을 절대 생성하지 말 것. [텍스트](URL) 형식 링크 자체를 작성 금지:"}
+{"  [🛒 쿠팡에서 구매하기](실제 product_url)" if products else "  ← 링크 없음. 독자가 직접 검색하도록 안내 문구로 대체할 것."}
+{"- 비교표(Table) 구매링크 열에도 반드시 마크다운 링크 형식 사용:" if products else "- 비교표(Table)에 구매링크 열 추가 금지. URL 없이 특징/장단점 위주로 구성할 것:"}
+{"  [구매하러가기](실제 product_url)  ← 괄호 안에 실제 URL 필수" if products else "  ← 링크 열 완전 제외"}
 - "구매링크: https://..." 형식(콜론+raw URL) 절대 금지 — 항상 [텍스트](URL) 형식만 사용
-- CTA는 각 상품 섹션 끝마다 개별 링크 삽입 + 결론부에 대표 상품 1회 추가
+{"- CTA는 각 상품 섹션 끝마다 개별 링크 삽입 + 결론부에 대표 상품 1회 추가" if products else "- CTA 버튼 완전 생성 금지. 구매 유도는 '~을 검색해보세요' 형태 자연 문장으로 대체"}
 - 존재하지 않는 내부 링크(/blog/...) 절대 생성 금지 — 쿠팡 URL만 사용
 - 결론: "이런 분에게 적합 / 이런 분은 다른 선택지가 나을 수 있음" 형태
+
+━━ 마크다운 테이블 필수 규칙 (위반 시 감점) ━━
+- 모든 테이블 행(Row)은 반드시 단 한 줄에 작성 (줄바꿈 절대 금지)
+- 형식 예시 (이 형식만 허용):
+  | 항목 | 값 | 설명 |
+  |------|-----|------|
+  | 상품A | 30,000원 | 가성비 우수 |
+- 각 셀 내용은 40자 이내로 요약 (긴 내용은 다음 줄이 아닌 요약문으로)
+- 구분선은 반드시 |---|---|---| 형식 (언더스코어_ 사용 금지)
+- 셀 안에 줄바꿈(\n) 절대 금지
+
 - 마지막 줄: tags: 태그1, 태그2, 태그3, 태그4, 태그5"""
     draft = _chat(model, system, user, temperature=0.75 + (attempt - 1) * 0.05, timeout=400)
     word_count = len(draft.split())
@@ -815,6 +826,49 @@ def _strip_non_korean(text: str) -> str:
     text = re.sub(r"(?<!\n)  +(?!\s*$)", " ", text)
     return text.strip()
 
+def _fix_md_tables(text: str) -> str:
+    """
+    LLM이 테이블 행을 여러 줄에 걸쳐 작성한 경우 한 줄로 병합.
+    | 로 시작하는 줄 다음에 | 없이 이어지는 텍스트는 직전 행 마지막 셀에 공백과 함께 합침.
+    """
+    lines = text.split('\n')
+    out: list[str] = []
+    in_table = False
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('|'):
+            in_table = True
+            out.append(stripped)
+        elif in_table and stripped and not re.match(r'^#{1,4}\s', stripped):
+            # 헤딩이 아닌 비-파이프 줄 → 직전 테이블 행의 연속
+            if out:
+                prev = out[-1]
+                # 직전이 구분선이면 건너뜀
+                if re.match(r'^[\s|:-]+$', prev):
+                    out.append(stripped)
+                else:
+                    out[-1] = prev.rstrip(' |') + ' ' + stripped
+            else:
+                out.append(line)
+        else:
+            if not stripped:
+                in_table = False
+            out.append(line)
+
+    return '\n'.join(out)
+
+
+def _remove_orphan_links(text: str) -> str:
+    """
+    URL 없는 [텍스트] (마크다운 링크가 아닌 단순 대괄호) 를 텍스트만 남겨 제거.
+    예: [🛒 구매하기] → 구매하기
+    단, 이미지 ![...] 와 레퍼런스 링크 [text][ref] 는 건드리지 않음.
+    """
+    # [text] not followed by ( or [ — strip brackets, keep inner text
+    return re.sub(r'(?<!!)\[([^\]\n]+)\](?!\s*[\(\[])', r'\1', text)
+
+
 def assemble(topic: dict, content: str, seo: dict,
              affiliate_url: str = "", product_image: str = "") -> dict:
     # JSON 래핑 잔재 제거 (LLM이 ```json { "improved_content": "..." } ``` 로 반환한 경우)
@@ -830,6 +884,8 @@ def assemble(topic: dict, content: str, seo: dict,
             pass
     clean = re.sub(r"\ntags?:.*$", "", stripped, flags=re.IGNORECASE | re.MULTILINE).rstrip()
     clean = re.sub(r"^# .+\n?", "", clean).strip()
+    clean = _fix_md_tables(clean)        # 분할된 테이블 행 병합
+    clean = _remove_orphan_links(clean)  # URL 없는 [텍스트] 제거
     clean = _strip_non_korean(clean)
     summary_match = re.match(r"^(.+?)(?:\n|$)", clean.strip())
     summary = summary_match.group(1).strip() if summary_match else topic["title"]

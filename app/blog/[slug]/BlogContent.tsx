@@ -111,30 +111,33 @@ export default function BlogContent({
           components={{
             table: ({ children }) => (
               <div className="overflow-x-auto mb-8 rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table className="w-full text-sm border-collapse min-w-[500px]">{children}</table>
+                <table className="w-full text-sm border-collapse min-w-[560px]">{children}</table>
               </div>
             ),
-            thead: ({ children }) => <thead>{children}</thead>,
-            tbody: ({ children }) => <tbody>{children}</tbody>,
-            tr: ({ children }) => <tr>{children}</tr>,
+            thead: ({ children }) => <thead className="bg-amber-50">{children}</thead>,
+            tbody: ({ children }) => <tbody className="divide-y divide-gray-100">{children}</tbody>,
+            tr: ({ children }) => <tr className="hover:bg-gray-50 transition-colors">{children}</tr>,
             th: ({ children }) => (
-              <th className="border-b border-gray-200 bg-amber-50 px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase tracking-wider first:rounded-tl-xl last:rounded-tr-xl">
+              <th className="border-b border-gray-200 px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase tracking-wider whitespace-nowrap first:rounded-tl-xl last:rounded-tr-xl">
                 {children}
               </th>
             ),
             td: ({ children }) => (
-              <td className="border-b border-gray-100 px-4 py-3 text-gray-700 text-[13px]">
+              <td className="px-4 py-3 text-gray-700 text-[13px] align-top leading-relaxed">
                 {children}
               </td>
             ),
             a: ({ href, children }) => {
               const text = String(children ?? "");
+              const hasValidHref = !!href && href.startsWith("http");
               const isBuyLink =
-                text.includes("구매") ||
-                text.includes("쿠팡") ||
-                text.includes("보러가기") ||
-                text.includes("바로가기") ||
-                text.includes("주문하기");
+                hasValidHref && (
+                  text.includes("구매") ||
+                  text.includes("쿠팡") ||
+                  text.includes("보러가기") ||
+                  text.includes("바로가기") ||
+                  text.includes("주문하기")
+                );
               if (isBuyLink) {
                 return (
                   <a
@@ -147,6 +150,10 @@ export default function BlogContent({
                     {children}
                   </a>
                 );
+              }
+              if (!hasValidHref) {
+                // URL 없는 링크 — 일반 텍스트로 렌더링
+                return <span className="text-gray-700">{children}</span>;
               }
               return (
                 <a
