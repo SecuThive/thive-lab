@@ -219,100 +219,206 @@ def score_keywords_by_trend(keywords: list[str], geo: str = "KR") -> dict[str, i
     return scores
 
 
+def _keyword_to_topic(kw: str, category: str, score: int = 0) -> dict:
+    """트렌드 키워드 하나를 blog_generator TOPICS 형식 dict 로 변환."""
+    safe_key = re.sub(r"[^a-zA-Z0-9가-힣]", "_", kw)
+    return {
+        "key":            f"trend_{safe_key}_{int(time.time())}",
+        "title":          f"{kw} 추천 — 가성비 비교 가이드",
+        "category":       category,
+        "search_keyword": kw,
+        "is_trend":       True,
+        "trend_score":    score,
+        "dynamic":        True,   # 고정 TOPICS 가 아닌 동적 생성 표시
+    }
+
+
+def _fetch_pytrends_shopping_keywords(
+    category_filter: Optional[str] = None,
+    limit: int = 30,
+) -> list[tuple[str, str, int]]:
+    """
+    pytrends 쇼핑 카테고리(cat=18) 인기 검색어를 수집.
+    반환: [(keyword, category, score), ...]
+    """
+    try:
+        from pytrends.request import TrendReq
+    except ImportError:
+        return []
+
+    results: list[tuple[str, str, int]] = []
+    try:
+        pytrends = TrendReq(hl="ko-KR", tz=540, timeout=(10, 30), retries=2, backoff_factor=1.0)
+
+        # 카테고리별 대표 시드 키워드로 관련 쿼리 수집
+        seed_keywords: list[str] = []
+        if category_filter:
+            seed_keywords = CATEGORY_KEYWORDS.get(category_filter, [])[:3]
+        else:
+            # 전체 카테고리에서 각 2개씩
+            for kws in CATEGORY_KEYWORDS.values():
+                seed_keywords.extend(kws[:2])
+
+        seed_keywords = seed_keywords[:5]  # Google 제한
+        if not seed_keywords:
+            return []
+
+        pytrends.build_payload(seed_keywords, cat=18, timeframe="now 7-d", geo="KR")
+        related = pytrends.related_queries()
+
+        for seed in seed_keywords:
+            df_top = related.get(seed, {}).get("top")
+            if df_top is None or df_top.empty:
+                continue
+            for _, row in df_top.head(5).iterrows():
+                kw    = str(row.get("query", "")).strip()
+                score = int(row.get("value", 0))
+                if not kw or not _is_shopping_relevant(kw):
+                    continue
+                cat = match_category(kw)
+                if not cat:
+                    continue
+                if category_filter and cat != category_filter:
+                    continue
+                results.append((kw, cat, score))
+
+        log.info("[Trends pytrends shopping] 수집 키워드: %d개", len(results))
+        time.sleep(2)
+    except Exception as e:
+        log.debug("[Trends pytrends shopping] 실패: %s", e)
+
+    return results
+
+
 def get_trending_topics(
     category_filter: Optional[str] = None,
     limit: int = 5,
     all_topics: Optional[list[dict]] = None,
+    exclude_published: Optional[set] = None,
 ) -> list[dict]:
     """
     Google Trends 기반 동적 토픽 생성.
 
+    고정 TOPICS 목록에 의존하지 않고, 실시간 트렌드 키워드 자체를 토픽으로 변환.
+
     전략:
-    1. 기존 TOPICS 의 search_keyword 들을 Google Trends 에 조회해
-       최근 7일 관심도 점수(0~100) 를 가져옴.
-    2. 점수 높은 순으로 정렬 → 상위 항목을 트렌드 토픽으로 반환.
-    3. RSS 급상승에서 쇼핑 키워드 발견되면 보너스로 앞에 추가.
+    1. Google Trends RSS 급상승 → 쇼핑 키워드 필터 → 카테고리 매핑
+    2. pytrends 쇼핑 카테고리(cat=18) 관련 쿼리 → 추가 키워드 수집
+    3. 이미 발행된 키워드(exclude_published) 제외
+    4. pytrends interest_over_time 으로 관심도 점수 계산 후 정렬
+    5. 고정 TOPICS 는 보완 소스로만 활용 (all_topics 전달 시)
 
     Returns:
         blog_generator TOPICS 형식과 호환되는 dict 리스트.
         각 dict 에 'is_trend': True, 'trend_score': int 포함.
     """
-    # blog_generator 의 TOPICS 를 외부에서 주입받거나 없으면 빈 상태
-    base_topics = all_topics or []
+    published = exclude_published or set()
 
-    # ── Step 1: RSS 급상승에서 쇼핑 키워드 보너스 수집 ────────────
-    rss_keywords: list[str] = []
-    raw_rss = fetch_realtime_trends(limit=30)
+    # ── Step 1: RSS 급상승 키워드 수집 ────────────────────────────
+    raw_rss = fetch_realtime_trends(limit=50)
+    rss_candidates: list[tuple[str, str]] = []  # (keyword, category)
     for kw in raw_rss:
         if not _is_shopping_relevant(kw):
+            continue
+        if kw in published:
             continue
         category = match_category(kw)
         if not category:
             continue
         if category_filter and category != category_filter:
             continue
-        rss_keywords.append(kw)
-        log.info("[Trends] RSS 쇼핑 키워드 발견: %s [%s]", kw, category)
+        rss_candidates.append((kw, category))
+        log.info("[Trends RSS] 쇼핑 키워드: %s [%s]", kw, category)
 
-    # ── Step 2: 기존 TOPICS search_keyword 관심도 점수 조회 ───────
-    candidate_topics = [
-        t for t in base_topics
-        if (not category_filter or t.get("category") == category_filter)
+    # ── Step 2: pytrends 쇼핑 카테고리 관련 쿼리 수집 ────────────
+    pt_candidates: list[tuple[str, str, int]] = []
+    if len(rss_candidates) < limit:
+        pt_candidates = _fetch_pytrends_shopping_keywords(category_filter, limit=30)
+        pt_candidates = [(kw, cat, sc) for kw, cat, sc in pt_candidates if kw not in published]
+
+    # ── Step 3: 고정 TOPICS 보완 소스 ────────────────────────────
+    base_topics = all_topics or []
+    fixed_candidates: list[tuple[str, str]] = [
+        (t["search_keyword"], t.get("category", ""))
+        for t in base_topics
+        if t.get("search_keyword")
+        and t["search_keyword"] not in published
+        and (not category_filter or t.get("category") == category_filter)
     ]
-    kw_to_topic: dict[str, dict] = {
-        t["search_keyword"]: t for t in candidate_topics if t.get("search_keyword")
-    }
-    known_keywords = list(kw_to_topic.keys())[:25]   # 최대 25개 (배치 5개 × 5회)
 
-    log.info("[Trends] 관심도 점수 조회 키워드: %d개", len(known_keywords))
-    scores = score_keywords_by_trend(known_keywords) if known_keywords else {}
+    # ── Step 4: 관심도 점수 계산 ─────────────────────────────────
+    all_kws: list[str] = list({
+        kw for kw, _ in rss_candidates
+    } | {
+        kw for kw, _, _ in pt_candidates
+    } | {
+        kw for kw, _ in fixed_candidates
+    })[:25]  # Google 제한
 
-    if scores:
-        top = sorted(scores.items(), key=lambda x: -x[1])[:5]
-        log.info("[Trends] 관심도 Top5: %s", ", ".join(f"{k}({v})" for k, v in top))
-    else:
-        log.warning("[Trends] 관심도 점수 없음 — 랜덤 순서 사용")
+    scores: dict[str, int] = {}
+    if all_kws:
+        scores = score_keywords_by_trend(all_kws)
+        if scores:
+            top5 = sorted(scores.items(), key=lambda x: -x[1])[:5]
+            log.info("[Trends] 관심도 Top5: %s", ", ".join(f"{k}({v})" for k, v in top5))
+        else:
+            log.warning("[Trends] 관심도 점수 없음 — 수집 순서 유지")
 
-    # ── Step 3: 결과 조합 ──────────────────────────────────────────
+    # ── Step 5: 후보 통합 + 점수순 정렬 ──────────────────────────
+    # (keyword, category, score, source_priority) — 낮을수록 우선
+    merged: dict[str, tuple[str, str, int, int]] = {}
+
+    for kw, cat in rss_candidates:
+        merged[kw] = (kw, cat, scores.get(kw, 90), 1)  # RSS = 최우선
+
+    for kw, cat, pt_score in pt_candidates:
+        if kw not in merged:
+            merged[kw] = (kw, cat, scores.get(kw, pt_score), 2)
+
+    for kw, cat in fixed_candidates:
+        if kw not in merged:
+            merged[kw] = (kw, cat, scores.get(kw, 0), 3)
+
+    ranked = sorted(merged.values(), key=lambda x: (x[3], -x[2]))
+
+    # ── Step 6: 카테고리 다양성 확보 후 limit 개 선택 ─────────────
     topics: list[dict] = []
     used_categories: set[str] = set()
 
-    # RSS 쇼핑 키워드 먼저 (진짜 실시간 트렌드)
-    for kw in rss_keywords:
-        category = match_category(kw)
-        if not category or category in used_categories:
-            continue
-        safe_key = re.sub(r"[^a-zA-Z0-9가-힣]", "_", kw)
-        topics.append({
-            "key":            f"trend_{safe_key}_{int(time.time())}",
-            "title":          f"{kw} 추천 비교 가이드",
-            "category":       category,
-            "search_keyword": kw,
-            "is_trend":       True,
-            "trend_score":    scores.get(kw, 99),   # RSS 급상승 = 높은 점수
-        })
-        used_categories.add(category)
+    for kw, cat, score, _ in ranked:
         if len(topics) >= limit:
             break
-
-    # 관심도 점수 높은 기존 TOPICS 토픽 추가
-    ranked_known = sorted(
-        [(kw, kw_to_topic[kw]) for kw in known_keywords],
-        key=lambda x: -scores.get(x[0], 0),
-    )
-    for kw, base_topic in ranked_known:
-        if len(topics) >= limit:
-            break
-        cat = base_topic.get("category", "")
         if cat in used_categories:
             continue
         used_categories.add(cat)
-        topics.append({
-            **base_topic,
-            "is_trend":    True,
-            "trend_score": scores.get(kw, 0),
-        })
-        log.info("[Trends] 토픽 선택: %s [%s] (score=%d)", kw, cat, scores.get(kw, 0))
+
+        # 고정 TOPICS 에 있으면 원본 구조 활용, 없으면 동적 생성
+        base = next(
+            (t for t in base_topics if t.get("search_keyword") == kw),
+            None,
+        )
+        if base:
+            topics.append({**base, "is_trend": True, "trend_score": score})
+        else:
+            topics.append(_keyword_to_topic(kw, cat, score))
+
+        log.info("[Trends] 토픽 확정: %s [%s] score=%d", kw, cat, score)
+
+    # 카테고리 다양성 못 채우면 same-category 재허용
+    if len(topics) < limit:
+        for kw, cat, score, _ in ranked:
+            if len(topics) >= limit:
+                break
+            if any(t["search_keyword"] == kw for t in topics):
+                continue
+            base = next(
+                (t for t in base_topics if t.get("search_keyword") == kw),
+                None,
+            )
+            if base:
+                topics.append({**base, "is_trend": True, "trend_score": score})
+            else:
+                topics.append(_keyword_to_topic(kw, cat, score))
 
     if not topics:
         log.warning("[Trends] 트렌드 토픽 없음 — blog_generator 가 고정 TOPICS 로 fallback")

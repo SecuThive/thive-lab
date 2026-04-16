@@ -209,16 +209,47 @@ def _fetch_published_keywords() -> set[str]:
     return set()
 
 def pick_topic(category_filter: Optional[str] = None) -> dict:
-    local_recent     = set(_load_history())
-    db_keywords      = _fetch_published_keywords()
+    """
+    트렌드 우선 토픽 선택.
 
-    # DB에 이미 올라간 search_keyword와 일치하는 토픽의 key
+    1. Google Trends 실시간 키워드 → 쇼핑 필터 → DB 발행 제외 → 관심도 정렬
+    2. 트렌드 실패 시 고정 TOPICS 폴백 (DB + 세션 + 로컬 히스토리 중복 제외)
+    """
+    db_keywords = _fetch_published_keywords()
+
+    # ── 트렌드 우선 시도 ─────────────────────────────────────────
+    if _TRENDS_AVAILABLE:
+        try:
+            trend_topics = get_trending_topics(
+                category_filter=category_filter,
+                limit=max(10, len(SITE_CATEGORIES)),
+                all_topics=TOPICS,
+                exclude_published=db_keywords,
+            )
+            # 이미 이번 세션에서 선택된 것 제외
+            trend_topics = [t for t in trend_topics if t["key"] not in _SESSION_USED_KEYS]
+            if trend_topics:
+                chosen = trend_topics[0]   # 관심도 1위
+                _SESSION_USED_KEYS.add(chosen["key"])
+                log.info(
+                    "[pick_topic] 🔥 트렌드 선택: %s [%s] score=%s%s",
+                    chosen["search_keyword"],
+                    chosen["category"],
+                    chosen.get("trend_score", "-"),
+                    " (동적)" if chosen.get("dynamic") else "",
+                )
+                return chosen
+            else:
+                log.info("[pick_topic] 트렌드 후보 없음 — 고정 TOPICS 폴백")
+        except Exception as e:
+            log.warning("[pick_topic] 트렌드 조회 실패 (%s) — 고정 TOPICS 폴백", e)
+
+    # ── 폴백: 고정 TOPICS ────────────────────────────────────────
+    local_recent = set(_load_history())
     db_used_keys = {
         t["key"] for t in TOPICS
         if t.get("search_keyword", "").strip() in db_keywords
     }
-
-    # 세 가지 소스를 합산한 사용된 key 집합
     used = local_recent | db_used_keys | _SESSION_USED_KEYS
 
     pool = TOPICS
@@ -226,22 +257,21 @@ def pick_topic(category_filter: Optional[str] = None) -> dict:
         pool = [t for t in TOPICS if t["category"] == category_filter]
 
     available = [t for t in pool if t["key"] not in used]
-
     if not available:
-        # 로컬 history는 무시하고 DB + 세션만 적용
         available = [t for t in pool if t["key"] not in (db_used_keys | _SESSION_USED_KEYS)]
     if not available:
-        # 카테고리 전체 소진 시 카테고리 제한 해제
         available = [t for t in TOPICS if t["key"] not in (db_used_keys | _SESSION_USED_KEYS)]
     if not available:
-        log.warning("[pick_topic] 모든 토픽이 이미 발행됨 — TOPICS 전체에서 재선택")
+        log.warning("[pick_topic] 고정 TOPICS 전체 소진 — 전체 재선택")
         available = pool or TOPICS
 
     chosen = random.choice(available)
     _SESSION_USED_KEYS.add(chosen["key"])
-    log.info("[pick_topic] 선택: %s (%s) | DB중복제외=%d, 세션중복제외=%d, 로컬history제외=%d",
-             chosen["key"], chosen["category"],
-             len(db_used_keys), len(_SESSION_USED_KEYS) - 1, len(local_recent))
+    log.info(
+        "[pick_topic] 📋 고정 TOPICS 선택: %s (%s) | DB제외=%d 세션제외=%d",
+        chosen["key"], chosen["category"],
+        len(db_used_keys), len(_SESSION_USED_KEYS) - 1,
+    )
     return chosen
 
 def slugify(text: str) -> str:
@@ -1656,8 +1686,8 @@ def main() -> None:
     parser.add_argument("--category",      type=str,  default=None,
                         choices=SITE_CATEGORIES,
                         help="특정 카테고리만 생성")
-    parser.add_argument("--trend",         action="store_true",
-                        help="Google Trends 기반 실시간 트렌드 토픽으로 생성")
+    parser.add_argument("--no-trend",       action="store_true",
+                        help="트렌드 무시하고 고정 TOPICS 에서만 선택")
     args = parser.parse_args()
 
     _PIPELINE_MODE = args.pipeline_mode
@@ -1677,41 +1707,37 @@ def main() -> None:
     log.info("선택된 모델: %s", model)
     if args.category:
         log.info("카테고리 필터: %s", args.category)
+    if args.no_trend:
+        log.info("[Trends] --no-trend 플래그 — 고정 TOPICS 모드")
+    elif _TRENDS_AVAILABLE:
+        log.info("[Trends] 트렌드 우선 모드 (실패 시 고정 TOPICS 폴백)")
+    else:
+        log.warning("[Trends] trend_fetcher 없음 — 고정 TOPICS 모드")
     _emit(f"[PIPELINE:model={model}]")
-
-    # ── 트렌드 모드: 토픽 목록 미리 수집 ─────────────────────────
-    trend_topics: list[dict] = []
-    if args.trend:
-        if not _TRENDS_AVAILABLE:
-            log.error("[Trends] trend_fetcher 모듈 없음 — pip install pytrends")
-            sys.exit(1)
-        log.info("[Trends] Google Trends 관심도 분석 중...")
-        trend_topics = get_trending_topics(
-            category_filter=args.category,
-            limit=max(args.count, 5),
-            all_topics=TOPICS,
-        )
-        if not trend_topics:
-            log.warning("[Trends] 매핑된 트렌드 없음 — 고정 TOPICS 로 fallback")
-        else:
-            log.info("[Trends] 사용할 트렌드 토픽 %d개:", len(trend_topics))
-            for t in trend_topics[:args.count]:
-                score_str = f" (관심도 {t['trend_score']})" if t.get("trend_score") else ""
-                log.info("  · [%s] %s%s", t["category"], t["search_keyword"], score_str)
 
     for i in range(args.count):
         if i > 0:
             time.sleep(5)
 
-        # 트렌드 모드면 trend_topics 에서, 없으면 고정 TOPICS 에서
-        if args.trend and trend_topics:
-            topic = trend_topics[i % len(trend_topics)]
+        if args.no_trend:
+            # 고정 TOPICS 강제 — 트렌드 건너뜀
+            db_keywords = _fetch_published_keywords()
+            local_recent = set(_load_history())
+            db_used_keys = {
+                t["key"] for t in TOPICS
+                if t.get("search_keyword", "").strip() in db_keywords
+            }
+            used = local_recent | db_used_keys | _SESSION_USED_KEYS
+            pool = [t for t in TOPICS if t["category"] == args.category] if args.category else TOPICS
+            available_fixed = [t for t in pool if t["key"] not in used] or pool
+            topic = random.choice(available_fixed)
+            _SESSION_USED_KEYS.add(topic["key"])
         else:
             topic = pick_topic(category_filter=args.category)
 
         log.info("\n[%d/%d] 토픽: %s (%s)%s",
                  i + 1, args.count, topic["title"], topic["category"],
-                 " [TREND]" if topic.get("is_trend") else "")
+                 " [🔥TREND]" if topic.get("is_trend") else " [📋고정]")
         _emit(f"[PIPELINE:topic_title={topic['title']}]")
         run_pipeline(topic, model, dry_run=args.dry_run, resume_stage=args.stage)
 
