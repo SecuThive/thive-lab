@@ -14,6 +14,11 @@ import {
   Lightbulb,
   Baby,
   Cookie,
+  Play,
+  Users,
+  BadgePercent,
+  Gift,
+  CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ProductCard, { type Product } from "@/components/ProductCard";
@@ -204,43 +209,93 @@ export default async function HomePage() {
       <div id="categories" />
 
       {/* ── 구독핀 파트너스 배너 ───────────────────────────────────────────── */}
-      <section className="bg-gray-50 px-4 py-6 lg:px-8">
+      <section className="bg-gradient-to-br from-violet-50 via-white to-purple-50 border-y border-violet-100 px-4 py-10 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          {/* 섹션 구분 라벨 */}
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-gray-400">
-            파트너스 · Partners
-          </p>
-          <a
-            href="https://www.gudokpin.com/subscribe?ref=구독핀oeOkh"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-5 rounded-2xl border border-violet-200 bg-white px-6 py-4 shadow-sm transition hover:border-violet-300 hover:shadow-md"
-          >
-            {/* 아이콘 */}
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-violet-50 border border-violet-200 text-base font-black text-violet-700">
-              핀
-            </div>
 
-            {/* 텍스트 */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-sm font-bold text-gray-900">구독핀</span>
-                <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
-                  파트너스
-                </span>
+          {/* 섹션 라벨 */}
+          <div className="mb-5 flex items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-violet-400">파트너스 · Partners</span>
+            <span className="h-px flex-1 bg-violet-100" />
+          </div>
+
+          <div className="rounded-3xl border border-violet-200 bg-white shadow-md shadow-violet-100/60 overflow-hidden">
+
+            {/* 상단 헤더 */}
+            <div className="bg-gradient-to-r from-violet-600 to-purple-500 px-6 py-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-sm font-black text-white">
+                  핀
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-extrabold text-white">구독핀</span>
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">공식 파트너</span>
+                  </div>
+                  <p className="text-xs text-violet-200 mt-0.5">OTT 구독 공유 플랫폼 · 비용을 반으로 줄이세요</p>
+                </div>
               </div>
-              <p className="text-xs text-gray-600">
-                각종 구독 서비스를 한 곳에서 관리 — 추천 코드 적용 시{" "}
-                <span className="font-bold text-violet-700">3,000원 할인</span>
-              </p>
+              {/* 할인 배지 */}
+              <div className="hidden sm:flex flex-col items-center rounded-2xl bg-white/15 px-4 py-2 text-center border border-white/20">
+                <span className="text-xl font-extrabold text-white leading-none">3,000원</span>
+                <span className="text-[10px] text-violet-200 mt-0.5">첫 구독 할인</span>
+              </div>
             </div>
 
-            {/* CTA */}
-            <div className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition group-hover:bg-violet-500">
-              할인받기
-              <ArrowUpRight className="h-3.5 w-3.5" />
+            <div className="px-6 py-6">
+
+              {/* 서비스 소개 */}
+              <p className="mb-5 text-sm text-gray-600 leading-relaxed">
+                구독핀은 <strong className="text-gray-900">Netflix · 왓챠 · 디즈니+ · 웨이브</strong> 등 OTT 구독을 여러 명이 함께 나눠 쓰는 플랫폼입니다.
+                혼자 내던 구독료를 최대 <strong className="text-violet-700">절반 이하</strong>로 줄이고, 안전한 결제·자동 매칭 시스템으로 번거로움 없이 관리하세요.
+              </p>
+
+              {/* 혜택 카드 4개 */}
+              <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { icon: BadgePercent, label: "구독료 절반",   desc: "멤버와 나눠 내는 월정액",   color: "text-violet-600", bg: "bg-violet-50",  border: "border-violet-200" },
+                  { icon: Play,        label: "OTT 전 종류",  desc: "넷플릭스·왓챠·디즈니+",  color: "text-purple-600", bg: "bg-purple-50",  border: "border-purple-200" },
+                  { icon: Users,       label: "자동 파티 매칭", desc: "클릭 한 번으로 즉시 연결",  color: "text-indigo-600", bg: "bg-indigo-50",  border: "border-indigo-200" },
+                  { icon: CheckCircle2, label: "안전 결제",    desc: "에스크로 보호 결제 시스템", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
+                ].map(({ icon: Icon, label, desc, color, bg, border }) => (
+                  <div key={label} className={`rounded-2xl border p-3 ${bg} ${border}`}>
+                    <Icon className={`mb-1.5 h-4 w-4 ${color}`} />
+                    <p className={`text-xs font-bold ${color}`}>{label}</p>
+                    <p className="mt-0.5 text-[11px] text-gray-500 leading-snug">{desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* 리워드 + CTA */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+
+                {/* 추천 리워드 안내 */}
+                <div className="flex-1 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <Gift className="h-5 w-5 shrink-0 text-amber-500" />
+                  <div>
+                    <p className="text-xs font-bold text-gray-800">추천 코드 혜택</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      신규 가입 시 <span className="font-bold text-amber-600">3,000원 즉시 할인</span>
+                      <span className="mx-1 text-gray-300">·</span>
+                      추천인 <span className="font-bold text-amber-600">5,000 핀 적립</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* CTA 버튼 */}
+                <a
+                  href="https://www.gudokpin.com/subscribe?ref=구독핀oeOkh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-400/30 transition hover:bg-violet-500 active:scale-95"
+                >
+                  <Play className="h-3.5 w-3.5 fill-white" />
+                  지금 할인받고 시작하기
+                  <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              </div>
+
             </div>
-          </a>
+          </div>
         </div>
       </section>
 
