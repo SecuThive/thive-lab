@@ -27,7 +27,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="star-rating text-xs">
       {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={i < full ? "text-amber-400" : i === full && half ? "text-amber-400/50" : "text-zinc-700"}>
+        <span key={i} className={i < full ? "text-amber-400" : i === full && half ? "text-amber-300" : "text-gray-200"}>
           ★
         </span>
       ))}
@@ -39,7 +39,7 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <div className="product-card group">
       {/* 이미지 영역 */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-zinc-800/50">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
         {product.image_url ? (
           <Image
             src={product.image_url}
@@ -50,7 +50,7 @@ export default function ProductCard({ product }: { product: Product }) {
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <ShoppingCart className="h-10 w-10 text-zinc-700" />
+            <ShoppingCart className="h-10 w-10 text-gray-300" />
           </div>
         )}
 
@@ -66,7 +66,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* 카테고리 */}
         {product.category && (
-          <span className="absolute bottom-3 right-3 rounded-full border border-zinc-700/80 bg-zinc-950/80 px-2 py-0.5 text-[10px] text-zinc-400 backdrop-blur-sm">
+          <span className="absolute bottom-3 right-3 rounded-full border border-gray-200 bg-white/90 px-2 py-0.5 text-[10px] text-gray-600 backdrop-blur-sm shadow-sm">
             {product.category}
           </span>
         )}
@@ -74,12 +74,12 @@ export default function ProductCard({ product }: { product: Product }) {
 
       {/* 정보 */}
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h3 className="text-sm font-semibold leading-snug text-zinc-100 line-clamp-2 group-hover:text-amber-300 transition-colors">
+        <h3 className="text-sm font-semibold leading-snug text-gray-800 line-clamp-2 group-hover:text-amber-600 transition-colors">
           {product.name}
         </h3>
 
         {product.description && (
-          <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
             {product.description}
           </p>
         )}
@@ -88,7 +88,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {product.rating && (
           <div className="flex items-center gap-2">
             <StarRating rating={product.rating} />
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-gray-400">
               {product.rating.toFixed(1)}
               {product.review_count ? ` (${priceFormatter.format(product.review_count)}개)` : ""}
             </span>

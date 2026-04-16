@@ -3,99 +3,99 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  @apply min-h-screen bg-zinc-950 font-sans text-zinc-100 antialiased;
+  @apply min-h-screen bg-slate-50 font-sans text-gray-900 antialiased;
   background-image:
-    radial-gradient(circle at top right,  rgba(245, 158, 11, 0.10), transparent 50%),
-    radial-gradient(circle at 10% 85%,   rgba(234, 88,  12, 0.07), transparent 50%);
+    radial-gradient(circle at top right,  rgba(245, 158, 11, 0.07), transparent 50%),
+    radial-gradient(circle at 10% 85%,   rgba(234, 88,  12, 0.04), transparent 50%);
   background-repeat: no-repeat;
 }
 
 ::selection {
-  @apply bg-amber-500/50 text-white;
+  @apply bg-amber-400/40 text-gray-900;
 }
 
 /* ── 쿠팡 파트너스 CTA 버튼 ──────────────────────────────────── */
 .btn-coupang {
   @apply inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5
-         text-sm font-semibold text-black shadow-lg shadow-amber-500/20
+         text-sm font-semibold text-black shadow-lg shadow-amber-500/25
          transition hover:bg-amber-400 active:scale-95;
 }
 
 /* ── 상품 카드 ─────────────────────────────────────────────── */
 .product-card {
-  @apply relative flex flex-col overflow-hidden rounded-2xl border border-zinc-800/60
-         bg-zinc-900/50 transition hover:border-amber-500/30 hover:bg-zinc-900/80;
+  @apply relative flex flex-col overflow-hidden rounded-2xl border border-gray-200
+         bg-white transition hover:border-amber-400/50 hover:shadow-md hover:shadow-amber-500/10;
 }
 
 /* ── 카테고리 필 ─────────────────────────────────────────── */
 .category-pill {
-  @apply rounded-full border border-zinc-700/60 bg-zinc-900/60 px-4 py-1.5 text-sm
-         text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-300
-         data-[active=true]:border-amber-500 data-[active=true]:bg-amber-500/10
-         data-[active=true]:text-amber-300;
+  @apply rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm
+         text-gray-600 transition hover:border-amber-400/60 hover:text-amber-600
+         data-[active=true]:border-amber-500 data-[active=true]:bg-amber-50
+         data-[active=true]:text-amber-600;
 }
 
 /* ── 블로그 본문 ──────────────────────────────────────────────── */
 .prose-blog {
-  @apply text-zinc-300 text-[15px] leading-[1.85];
+  @apply text-gray-700 text-[15px] leading-[1.85];
 }
 
 /* 제목 계층 */
 .prose-blog h1 {
-  @apply text-2xl sm:text-3xl font-bold text-white mt-12 mb-5;
+  @apply text-2xl sm:text-3xl font-bold text-gray-900 mt-12 mb-5;
 }
 .prose-blog h2 {
-  @apply text-xl sm:text-2xl font-bold text-white mt-12 mb-5 pb-3 border-b border-zinc-800;
+  @apply text-xl sm:text-2xl font-bold text-gray-900 mt-12 mb-5 pb-3 border-b border-gray-200;
 }
 .prose-blog h3 {
-  @apply text-lg sm:text-xl font-semibold text-zinc-100 mt-8 mb-4;
+  @apply text-lg sm:text-xl font-semibold text-gray-800 mt-8 mb-4;
 }
 .prose-blog h4 {
-  @apply text-base font-semibold text-zinc-200 mt-6 mb-3;
+  @apply text-base font-semibold text-gray-700 mt-6 mb-3;
 }
 
 /* 본문 요소 */
 .prose-blog p {
-  @apply mb-5 text-zinc-300;
+  @apply mb-5 text-gray-700;
 }
 .prose-blog strong {
-  @apply font-semibold text-white;
+  @apply font-semibold text-gray-900;
 }
 .prose-blog em {
-  @apply italic text-zinc-200;
+  @apply italic text-gray-700;
 }
 
 /* 리스트 */
 .prose-blog ul {
-  @apply mb-6 pl-5 space-y-2 text-zinc-300;
+  @apply mb-6 pl-5 space-y-2 text-gray-700;
   list-style-type: disc;
 }
 .prose-blog ol {
-  @apply mb-6 pl-5 space-y-2 text-zinc-300;
+  @apply mb-6 pl-5 space-y-2 text-gray-700;
   list-style-type: decimal;
 }
 .prose-blog li {
   @apply leading-relaxed pl-1;
 }
 .prose-blog li strong {
-  @apply text-amber-300;
+  @apply text-amber-600;
 }
 .prose-blog li::marker {
-  @apply text-amber-500/60;
+  @apply text-amber-500/70;
 }
 
 /* 구분선 */
 .prose-blog hr {
-  @apply border-0 h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent my-10;
+  @apply border-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-10;
 }
 
 /* 링크 */
 .prose-blog a {
-  @apply text-amber-400 underline underline-offset-2 decoration-amber-400/30 hover:text-amber-300 hover:decoration-amber-300/50 transition-colors;
+  @apply text-amber-600 underline underline-offset-2 decoration-amber-400/50 hover:text-amber-500 hover:decoration-amber-500/60 transition-colors;
 }
 
 /* 테이블 */
@@ -103,21 +103,21 @@ body {
   @apply w-full text-sm border-collapse mb-8;
 }
 .prose-blog thead th {
-  @apply border border-zinc-700 bg-zinc-800/60 px-3 py-2.5 text-left text-xs font-semibold text-amber-300/90 uppercase tracking-wider;
+  @apply border border-gray-200 bg-gray-100 px-3 py-2.5 text-left text-xs font-semibold text-amber-700 uppercase tracking-wider;
 }
 .prose-blog tbody td {
-  @apply border border-zinc-800/60 px-3 py-2.5 text-zinc-300 text-[13px];
+  @apply border border-gray-200 px-3 py-2.5 text-gray-700 text-[13px];
 }
 .prose-blog tbody tr:nth-child(even) {
-  @apply bg-zinc-900/30;
+  @apply bg-gray-50;
 }
 .prose-blog tbody tr:hover {
-  @apply bg-zinc-800/40;
+  @apply bg-amber-50/50;
 }
 
 /* 인용문 */
 .prose-blog blockquote {
-  @apply my-6 border-l-4 border-amber-500/40 bg-amber-500/5 rounded-r-lg px-5 py-4 text-zinc-300 italic;
+  @apply my-6 border-l-4 border-amber-400 bg-amber-50 rounded-r-lg px-5 py-4 text-gray-700 italic;
 }
 .prose-blog blockquote p {
   @apply mb-0;
@@ -125,14 +125,14 @@ body {
 
 /* 인라인 코드 */
 .prose-blog code {
-  @apply rounded bg-zinc-800/70 px-1.5 py-0.5 text-sm font-mono text-amber-300;
+  @apply rounded bg-gray-100 px-1.5 py-0.5 text-sm font-mono text-amber-700;
 }
 /* 코드 블록 */
 .prose-blog pre {
-  @apply mb-6 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/80 p-5;
+  @apply mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-gray-50 p-5;
 }
 .prose-blog pre code {
-  @apply bg-transparent px-0 py-0 text-sm text-zinc-200;
+  @apply bg-transparent px-0 py-0 text-sm text-gray-800;
 }
 
 /* 이미지 */
@@ -141,13 +141,13 @@ body {
 }
 
 /* ── 가격 표시 ──────────────────────────────────────────────── */
-.price-sale   { @apply text-amber-400 font-bold; }
-.price-origin { @apply text-zinc-500 line-through text-sm; }
+.price-sale   { @apply text-amber-600 font-bold; }
+.price-origin { @apply text-gray-400 line-through text-sm; }
 .badge-discount {
-  @apply rounded-md bg-red-500/20 px-1.5 py-0.5 text-xs font-bold text-red-400;
+  @apply rounded-md bg-red-100 px-1.5 py-0.5 text-xs font-bold text-red-500;
 }
 .badge-hot {
-  @apply rounded-md bg-amber-500/20 px-1.5 py-0.5 text-xs font-bold text-amber-400;
+  @apply rounded-md bg-amber-100 px-1.5 py-0.5 text-xs font-bold text-amber-600;
 }
 
 /* ── 별점 ────────────────────────────────────────────────────── */

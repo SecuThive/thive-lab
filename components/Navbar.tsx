@@ -25,7 +25,7 @@ export default function Navbar() {
     href === "/" ? pathname === "/" : pathname?.startsWith(href);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-zinc-800/50 bg-zinc-950/85 backdrop-blur-lg">
+    <nav className="sticky top-0 z-50 border-b border-gray-200/80 bg-white/90 backdrop-blur-lg shadow-sm shadow-gray-100/50">
       <div className="mx-auto max-w-6xl px-4 lg:px-8">
         <div className="flex h-15 items-center justify-between gap-4 py-3">
 
@@ -35,8 +35,8 @@ export default function Navbar() {
               <span className="text-xs font-black text-black">TL</span>
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-sm font-bold text-white">Thive Lab</span>
-              <span className="text-[10px] text-amber-400/80 tracking-wide">추천 & 리뷰</span>
+              <span className="text-sm font-bold text-gray-900">Thive Lab</span>
+              <span className="text-[10px] text-amber-500 tracking-wide">추천 & 리뷰</span>
             </div>
           </Link>
 
@@ -46,8 +46,8 @@ export default function Navbar() {
               href="/blog?category=전체"
               className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive("/blog") && !pathname?.includes("/blog/")
-                  ? "bg-amber-500/10 text-amber-300"
-                  : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
+                  ? "bg-amber-50 text-amber-600"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
               <Flame className="h-3.5 w-3.5" />
@@ -61,8 +61,8 @@ export default function Navbar() {
                 onMouseLeave={() => setCatOpen(false)}
                 className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   catOpen
-                    ? "bg-zinc-800/60 text-zinc-100"
-                    : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
                 <Grid3X3 className="h-3.5 w-3.5" />
@@ -70,7 +70,7 @@ export default function Navbar() {
               </button>
               {catOpen && (
                 <div
-                  className="absolute left-0 top-full w-40 rounded-xl border border-zinc-800 bg-zinc-900 py-2 shadow-xl"
+                  className="absolute left-0 top-full w-40 rounded-xl border border-gray-200 bg-white py-2 shadow-lg shadow-gray-200/60"
                   onMouseEnter={() => setCatOpen(true)}
                   onMouseLeave={() => setCatOpen(false)}
                 >
@@ -78,7 +78,7 @@ export default function Navbar() {
                     <Link
                       key={c.slug}
                       href={`/blog?category=${encodeURIComponent(c.label)}`}
-                      className="block px-4 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-amber-300 transition-colors"
+                      className="block px-4 py-1.5 text-sm text-gray-600 hover:bg-amber-50 hover:text-amber-600 transition-colors"
                     >
                       {c.label}
                     </Link>
@@ -92,7 +92,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors md:hidden"
+              className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors md:hidden"
               aria-label="메뉴 열기"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -111,25 +111,25 @@ export default function Navbar() {
 
       {/* 모바일 메뉴 */}
       {mobileOpen && (
-        <div className="border-t border-zinc-800/40 bg-zinc-950 md:hidden">
+        <div className="border-t border-gray-200/60 bg-white md:hidden">
           <div className="mx-auto max-w-6xl px-4 py-4 space-y-1">
             <Link
               href="/blog"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-zinc-300 hover:bg-zinc-800/60 hover:text-amber-300 transition-colors"
+              className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium text-gray-600 hover:bg-amber-50 hover:text-amber-600 transition-colors"
             >
               <FileText className="h-4 w-4" />
               추천 가이드
             </Link>
             <div className="px-4 py-2">
-              <p className="mb-2 text-xs uppercase tracking-widest text-zinc-600">카테고리</p>
+              <p className="mb-2 text-xs uppercase tracking-widest text-gray-400">카테고리</p>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((c) => (
                   <Link
                     key={c.slug}
                     href={`/blog?category=${encodeURIComponent(c.label)}`}
                     onClick={() => setMobileOpen(false)}
-                    className="rounded-full border border-zinc-700/60 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400 hover:border-amber-500/50 hover:text-amber-300 transition-colors"
+                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-600 hover:border-amber-400/60 hover:text-amber-600 transition-colors"
                   >
                     {c.label}
                   </Link>

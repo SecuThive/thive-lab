@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <html lang="ko" className="bg-zinc-950">
+    <html lang="ko" className="bg-slate-50">
       <head>
         <link
           rel="alternate"
@@ -89,7 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AdSenseScript />
         <GoogleAnalytics />
       </head>
-      <body className={`${inter.variable} bg-zinc-950`}>
+      <body className={`${inter.variable} bg-slate-50`}>
         <Navbar />
         {children}
         <Analytics />
