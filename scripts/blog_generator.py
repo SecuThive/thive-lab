@@ -168,6 +168,9 @@ TOPICS = [
 # 유틸리티
 # ══════════════════════════════════════════════════════════════
 
+# 현재 실행 세션에서 이미 선택된 key (배치 실행 중 중복 방지)
+_SESSION_USED_KEYS: set[str] = set()
+
 def _load_history() -> list[str]:
     try:
         return json.loads(HISTORY_FILE.read_text("utf-8"))
@@ -175,6 +178,7 @@ def _load_history() -> list[str]:
         return []
 
 def _save_history(key: str) -> None:
+    _SESSION_USED_KEYS.add(key)
     history = _load_history()
     if key not in history:
         history.insert(0, key)
@@ -183,13 +187,62 @@ def _save_history(key: str) -> None:
     except Exception:
         pass
 
+def _fetch_published_keywords() -> set[str]:
+    """DB에 이미 발행된 blog_posts의 search_keyword 목록을 조회한다."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return set()
+    try:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/blog_posts",
+            params={"select": "search_keyword", "limit": 1000},
+            headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
+            timeout=10,
+        )
+        if resp.ok:
+            return {
+                r["search_keyword"].strip()
+                for r in resp.json()
+                if r.get("search_keyword")
+            }
+    except Exception:
+        pass
+    return set()
+
 def pick_topic(category_filter: Optional[str] = None) -> dict:
-    recent = set(_load_history())
+    local_recent     = set(_load_history())
+    db_keywords      = _fetch_published_keywords()
+
+    # DB에 이미 올라간 search_keyword와 일치하는 토픽의 key
+    db_used_keys = {
+        t["key"] for t in TOPICS
+        if t.get("search_keyword", "").strip() in db_keywords
+    }
+
+    # 세 가지 소스를 합산한 사용된 key 집합
+    used = local_recent | db_used_keys | _SESSION_USED_KEYS
+
     pool = TOPICS
     if category_filter and category_filter in SITE_CATEGORIES:
         pool = [t for t in TOPICS if t["category"] == category_filter]
-    pool = [t for t in pool if t["key"] not in recent] or (pool or TOPICS)
-    return random.choice(pool)
+
+    available = [t for t in pool if t["key"] not in used]
+
+    if not available:
+        # 로컬 history는 무시하고 DB + 세션만 적용
+        available = [t for t in pool if t["key"] not in (db_used_keys | _SESSION_USED_KEYS)]
+    if not available:
+        # 카테고리 전체 소진 시 카테고리 제한 해제
+        available = [t for t in TOPICS if t["key"] not in (db_used_keys | _SESSION_USED_KEYS)]
+    if not available:
+        log.warning("[pick_topic] 모든 토픽이 이미 발행됨 — TOPICS 전체에서 재선택")
+        available = pool or TOPICS
+
+    chosen = random.choice(available)
+    _SESSION_USED_KEYS.add(chosen["key"])
+    log.info("[pick_topic] 선택: %s (%s) | DB중복제외=%d, 세션중복제외=%d, 로컬history제외=%d",
+             chosen["key"], chosen["category"],
+             len(db_used_keys), len(_SESSION_USED_KEYS) - 1, len(local_recent))
+    return chosen
 
 def slugify(text: str) -> str:
     """영문/숫자/하이픈만 남기는 URL-safe slug 생성 (한글 제거)"""
