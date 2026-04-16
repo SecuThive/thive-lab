@@ -26,6 +26,18 @@ export default function BlogContent({
   const topCtaRef = useRef<HTMLDivElement>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
 
+  // 조회수 1회 카운트 (세션당 중복 방지)
+  useEffect(() => {
+    const key = `viewed_${slug}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    fetch("/api/view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    }).catch(() => {});
+  }, [slug]);
+
   // 상단 CTA가 뷰포트를 벗어나면 하단 고정 바 노출
   useEffect(() => {
     if (!affiliateUrl) return;

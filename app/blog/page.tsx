@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { ArrowUpRight, ShoppingBag, Tag, SlidersHorizontal, Clock, Newspaper } from "lucide-react";
+import { ArrowUpRight, ShoppingBag, Tag, SlidersHorizontal, Clock, Newspaper, TrendingUp, Flame, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type BlogPost = {
@@ -14,6 +14,7 @@ type BlogPost = {
   tags: string[];
   category: string | null;
   created_at: string;
+  view_count: number;
   affiliate_url?: string | null;
   product_image?: string | null;
 };
@@ -26,6 +27,8 @@ type RecentPost = {
   cover_image_url: string | null;
   created_at: string;
 };
+
+type SortKey = "latest" | "popular";
 
 const CATEGORIES = [
   "전체", "가전/IT", "생활용품", "주방", "뷰티/헬스", "스포츠", "아이디어", "유아/교육", "식품",
@@ -47,39 +50,36 @@ function catStyle(cat: string | null) {
 }
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
+  year: "numeric", month: "short", day: "numeric",
 });
-
 const shortDateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  month: "short",
-  day: "numeric",
+  month: "short", day: "numeric",
 });
 
 function ReviewListInner() {
-  const searchParams = useSearchParams();
-  const paramCategory = searchParams?.get("category") ?? "전체";
+  const searchParams   = useSearchParams();
+  const paramCategory  = searchParams?.get("category") ?? "전체";
 
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts,          setPosts]          = useState<BlogPost[]>([]);
+  const [recentPosts,    setRecentPosts]    = useState<RecentPost[]>([]);
+  const [loading,        setLoading]        = useState(true);
   const [activeCategory, setActiveCategory] = useState(
     CATEGORIES.includes(paramCategory) ? paramCategory : "전체"
   );
+  const [sortKey, setSortKey] = useState<SortKey>("latest");
 
   useEffect(() => {
     setActiveCategory(CATEGORIES.includes(paramCategory) ? paramCategory : "전체");
   }, [paramCategory]);
 
-  // 메인 콘텐츠: blog_posts
+  // 메인 콘텐츠 fetch
   useEffect(() => {
     setLoading(true);
     let query = supabase
       .from("blog_posts")
-      .select("id, slug, title, summary, tags, category, created_at, affiliate_url, product_image")
+      .select("id, slug, title, summary, tags, category, created_at, view_count, affiliate_url, product_image")
       .eq("status", "published")
-      .order("created_at", { ascending: false })
+      .order(sortKey === "popular" ? "view_count" : "created_at", { ascending: false })
       .limit(60);
 
     if (activeCategory !== "전체") {
@@ -90,34 +90,27 @@ function ReviewListInner() {
       setPosts((data ?? []) as BlogPost[]);
       setLoading(false);
     });
-  }, [activeCategory]);
+  }, [activeCategory, sortKey]);
 
-  // 사이드바: posts 테이블 (기존 생성된 콘텐츠)
+  // 사이드바 최근 포스트
   useEffect(() => {
     supabase
       .from("posts")
       .select("id, slug, title, category, cover_image_url, created_at")
       .order("created_at", { ascending: false })
       .limit(10)
-      .then(({ data }) => {
-        setRecentPosts((data ?? []) as RecentPost[]);
-      });
+      .then(({ data }) => setRecentPosts((data ?? []) as RecentPost[]));
   }, []);
 
   return (
     <div className="relative min-h-screen bg-slate-50 text-gray-900">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-amber-400/5 via-transparent to-transparent"
-      />
-
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
 
         {/* 헤더 */}
         <header className="mb-10 space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-xs uppercase tracking-[0.3em] text-gray-500 shadow-sm">
             <SlidersHorizontal className="h-3.5 w-3.5 text-amber-500" />
-            <span>Thive Lab · 추천 가이드</span>
+            Thive Lab · 추천 가이드
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             카테고리별 추천 가이드
@@ -127,27 +120,56 @@ function ReviewListInner() {
           </p>
         </header>
 
-        {/* 카테고리 필터 */}
-        <div className="mb-8 flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
+        {/* 카테고리 필터 + 정렬 */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          {/* 카테고리 탭 */}
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                data-active={activeCategory === cat ? "true" : "false"}
+                className="category-pill text-sm"
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* 정렬 토글 */}
+          <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              data-active={activeCategory === cat ? "true" : "false"}
-              className="category-pill text-sm"
+              onClick={() => setSortKey("latest")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                sortKey === "latest"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
             >
-              {cat}
+              <Clock className="h-3.5 w-3.5" />
+              최신순
             </button>
-          ))}
+            <button
+              onClick={() => setSortKey("popular")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                sortKey === "popular"
+                  ? "bg-amber-500 text-black"
+                  : "text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
+              인기순
+            </button>
+          </div>
         </div>
 
-        {/* ── 2-Column 레이아웃 ─────────────────────────────────── */}
+        {/* 2-Column 레이아웃 */}
         <div className="flex gap-8">
 
           {/* 왼쪽: 메인 콘텐츠 */}
           <div className="min-w-0 flex-1">
             <p className="mb-5 text-xs text-gray-400">
-              {loading ? "불러오는 중..." : `${posts.length}개의 추천 가이드`}
+              {loading ? "불러오는 중..." : `${posts.length}개의 추천 가이드 · ${sortKey === "popular" ? "인기순" : "최신순"}`}
             </p>
 
             {!loading && posts.length === 0 ? (
@@ -156,12 +178,23 @@ function ReviewListInner() {
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
-                {posts.map((post) => (
+                {posts.map((post, idx) => (
                   <Link
                     key={post.id}
                     href={`/blog/${post.slug}`}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:border-amber-300 hover:shadow-md hover:shadow-amber-100/60"
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:border-amber-300 hover:shadow-md hover:shadow-amber-100/60"
                   >
+                    {/* 인기순일 때 순위 뱃지 */}
+                    {sortKey === "popular" && idx < 3 && (
+                      <div className={`absolute left-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-black ${
+                        idx === 0 ? "bg-amber-500 text-black" :
+                        idx === 1 ? "bg-gray-400 text-white" :
+                                    "bg-amber-800 text-white"
+                      }`}>
+                        {idx + 1}
+                      </div>
+                    )}
+
                     {post.product_image && (
                       <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -200,10 +233,7 @@ function ReviewListInner() {
                         <div className="flex flex-wrap items-center gap-1.5 pt-1">
                           <Tag className="h-3 w-3 text-gray-300" />
                           {post.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] text-gray-500"
-                            >
+                            <span key={tag} className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] text-gray-500">
                               {tag}
                             </span>
                           ))}
@@ -211,12 +241,20 @@ function ReviewListInner() {
                       )}
 
                       <div className="mt-auto flex items-center justify-between">
-                        {post.affiliate_url ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
-                            <ShoppingBag className="h-3 w-3" />
-                            쿠팡 추천
-                          </span>
-                        ) : <span />}
+                        <div className="flex items-center gap-3">
+                          {post.affiliate_url && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                              <ShoppingBag className="h-3 w-3" />
+                              쿠팡 추천
+                            </span>
+                          )}
+                          {post.view_count > 0 && (
+                            <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                              <Eye className="h-3 w-3" />
+                              {post.view_count.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
                         <ArrowUpRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-amber-500 transition-colors" />
                       </div>
                     </div>
@@ -230,12 +268,12 @@ function ReviewListInner() {
           <aside className="hidden w-72 shrink-0 lg:block">
             <div className="sticky top-20 space-y-6">
 
-              {/* 최근 생성된 포스트 (posts 테이블) */}
+              {/* 최근 포스트 */}
               {recentPosts.length > 0 && (
                 <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                   <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-widest text-gray-400">
                     <Newspaper className="h-3.5 w-3.5 text-amber-500" />
-                    <span>최근 포스트</span>
+                    최근 포스트
                   </div>
                   <div className="space-y-3">
                     {recentPosts.map((post) => (
@@ -247,12 +285,7 @@ function ReviewListInner() {
                         {post.cover_image_url && (
                           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={post.cover_image_url}
-                              alt=""
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
+                            <img src={post.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
@@ -260,9 +293,7 @@ function ReviewListInner() {
                             {post.title}
                           </p>
                           <div className="mt-1 flex items-center gap-2">
-                            {post.category && (
-                              <span className="text-[10px] text-gray-400">{post.category}</span>
-                            )}
+                            {post.category && <span className="text-[10px] text-gray-400">{post.category}</span>}
                             <time className="text-[10px] text-gray-300">
                               {shortDateFormatter.format(new Date(post.created_at))}
                             </time>
@@ -274,11 +305,11 @@ function ReviewListInner() {
                 </div>
               )}
 
-              {/* 카테고리 요약 */}
+              {/* 카테고리 */}
               <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-widest text-gray-400">
                   <Clock className="h-3.5 w-3.5 text-amber-500" />
-                  <span>카테고리</span>
+                  카테고리
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.filter((c) => c !== "전체").map((cat) => (
@@ -307,13 +338,11 @@ function ReviewListInner() {
 
             </div>
           </aside>
-
         </div>
 
         {/* 모바일 파트너스 고지 */}
         <p className="mt-12 text-center text-xs text-gray-400 leading-relaxed lg:hidden">
           이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받을 수 있습니다.
-          추천 상품은 쿠팡 실구매자 데이터를 기반으로 선정됩니다.
         </p>
       </div>
     </div>
