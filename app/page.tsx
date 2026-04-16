@@ -339,7 +339,7 @@ export default async function HomePage() {
       )}
 
       {/* ── 최신 리뷰 글 ──────────────────────────────────────────────────── */}
-      <section className="px-4 pb-14 lg:px-8">
+      <section className="px-4 pt-14 pb-14 lg:px-8">
         <div className="mx-auto max-w-5xl">
           <SectionHeader
             label="최신 가이드"
