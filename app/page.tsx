@@ -387,6 +387,11 @@ export default async function HomePage() {
             <Link href="/terms"   className="hover:text-gray-600 transition-colors">이용약관</Link>
             <Link href="/blog"    className="hover:text-gray-600 transition-colors">전체 추천</Link>
           </div>
+          <p className="text-xs text-gray-400">
+            파트너스 · 광고 문의는{" "}
+            <span className="font-medium text-amber-500">우하단 문의하기</span>
+            {" "}버튼을 이용해 주세요.
+          </p>
           <p className="text-xs text-gray-300">© {new Date().getFullYear()} Thive Lab. All rights reserved.</p>
         </div>
       </footer>
