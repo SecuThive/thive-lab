@@ -524,14 +524,14 @@ def stage_outline(topic: dict, analysis: dict, model: str) -> str:
 
 3️⃣ [대안으로서의 상품 등장] (H2: 실제 추천 상품 비교)
    - 글의 중후반부에서 앞서 말한 기준에 부합하는 예시로 상품을 자연스럽게 등장
-   - 모든 수집된 상품을 개별 소개 (비교표 형식)
-   - 각 상품: 가격, 핵심 스펙, 장단점, 적합한 사용자
+   - 전체 상품 요약 비교표(Table): 제품명 | 가격 | 핵심 스펙 | 평점 | 구매링크 열 포함
+   - 각 상품 개별 섹션(H3): 실제 제품명·가격·스펙·장단점·적합한 사용자 + 개별 쿠팡 구매링크
    - 힌트 불릿 3개
 
 4️⃣ [진솔한 평가] (H2: 가격대별 정리 또는 장단점 비교)
    - '최고', '최저가', '강력 추천' 등 과장 광고 단어 절대 금지
    - 장점뿐 아니라 단점·아쉬운 점도 명확히 짚어 신뢰도 확보
-   - 상품 단점 설명 직후에 첫 번째 CTA(구매 링크) 배치
+   - 각 상품 섹션 끝에 해당 상품의 실제 쿠팡 구매링크 배치
    - 힌트 불릿 3개
 
 5️⃣ [행동 유도 — 결론] (H2: 최종 가이드)
@@ -589,7 +589,9 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
 [절대 금지]
 - '직접 써봤다', '사용해보니', '구매해서 써봤습니다' 등 1인칭 체험 표현
 - '최고', '최저가', '강력 추천', '무조건', '반드시' 등 과장 광고 표현
-- 수집된 상품 수보다 많은 TOP N 표기"""
+- 수집된 상품 수보다 많은 TOP N 표기
+- /blog/, /review/ 등 내부 사이트 링크 생성 금지 (존재하지 않는 URL 절대 삽입 금지)
+- 쿠팡 상품 데이터에 없는 가상의 제품명·가격·스펙 작성 금지"""
 
     user = f"""주제: {topic['title']}
 카테고리: {topic['category']}
@@ -607,8 +609,10 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
 - 도입부 첫 2~3문단에 즉답 배치 (역피라미드: 결론 먼저 → 상세)
 - 글의 전반부(1~2단계)에서는 특정 상품명 언급하지 않고 기준만 제시
 - 글의 중후반부(3단계)에서 수집된 상품 {len(products) if products else 0}개를 비교표로 자연스럽게 등장
-- 각 상품: 제품명, 가격, 핵심 스펙, 장단점, 적합한 사용자 기재
-- CTA 위치: 상품 단점 설명 직후에 1회, 결론부에 1회 (총 2회만)
+- 각 상품 개별 섹션(### 제품명): 실제 제품명, 실제 가격, 핵심 스펙, 장단점, 적합한 사용자 + 마지막에 [쿠팡에서 구매하기](실제 product_url) 링크 삽입
+- 비교표(Table)에도 반드시 "구매링크" 열 추가하여 각 상품의 실제 쿠팡 URL 포함
+- CTA는 각 상품 섹션 끝마다 개별 링크 삽입 + 결론부에 대표 상품 1회 추가
+- 존재하지 않는 내부 링크(/blog/...) 절대 생성 금지 — 쿠팡 URL만 사용
 - 결론: "이런 분에게 적합 / 이런 분은 다른 선택지가 나을 수 있음" 형태
 - 마지막 줄: tags: 태그1, 태그2, 태그3, 태그4, 태그5"""
     draft = _chat(model, system, user, temperature=0.75 + (attempt - 1) * 0.05, timeout=400)
@@ -657,20 +661,48 @@ JSON 형식:
 
 초고:
 ---
-{draft[:3000]}
+{draft}
 ---"""
     raw = _chat(model, system, user, temperature=0.4, timeout=400)
 
     score = 70
     improved = draft
+
+    # JSON 파싱 시도 — LLM이 ```json 펜스로 감쌀 수 있으므로 제거
+    cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip(), flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+
     try:
-        m = re.search(r"\{[\s\S]+\}", raw)
+        m = re.search(r"\{[\s\S]+\}", cleaned)
         if m:
             data = json.loads(m.group())
             score = int(data.get("score", 70))
-            improved = data.get("improved_content") or draft
+            content = data.get("improved_content", "")
+            # 개선 내용이 원본의 60% 미만이면 truncation으로 인한 손실로 판단 → 원본 유지
+            if content and len(content) > 200 and len(content) >= len(draft) * 0.6:
+                improved = content
+            elif content and len(content) > 200:
+                log.warning("  개선 내용이 원본보다 짧아 원본 유지 (improved=%d chars, draft=%d chars)",
+                            len(content), len(draft))
     except Exception:
-        improved = raw if len(raw) > 200 else draft
+        pass
+
+    # fallback: JSON 파싱 실패 시 raw에서 마크다운만 추출
+    if improved == draft and len(raw) > 300:
+        # raw가 JSON 래핑 없이 순수 마크다운일 수 있음
+        stripped = re.sub(r"^```(?:json|markdown)?\s*", "", raw.strip(), flags=re.IGNORECASE)
+        stripped = re.sub(r"\s*```$", "", stripped)
+        # JSON 구조가 아닌 순수 마크다운이면 사용
+        if not stripped.lstrip().startswith("{") and "##" in stripped:
+            improved = stripped
+
+    # 최종 안전장치: improved에 JSON 잔재가 남아있으면 제거
+    if improved.lstrip().startswith("{") and '"improved_content"' in improved[:200]:
+        try:
+            data = json.loads(re.search(r"\{[\s\S]+\}", improved).group())  # type: ignore
+            improved = data.get("improved_content", draft)
+        except Exception:
+            improved = draft
 
     score = max(0, min(100, score))
     log.info("  품질 점수: %d/100", score)
@@ -762,13 +794,24 @@ def _strip_non_korean(text: str) -> str:
                 or re.match(r"^[a-zA-Z0-9\s\-_.,!?:;\'\"()\[\]{}<>/@#$%^&*+=~`|\\/#*>]+$", stripped)):
             cleaned.append(line)
     text = "\n".join(cleaned)
-    # 연속 공백 정리
-    text = re.sub(r"  +", " ", text)
+    # 연속 공백 정리 (줄 내부만, 마크다운 후행 더블스페이스 보존)
+    text = re.sub(r"(?<!\n)  +(?!\s*$)", " ", text)
     return text.strip()
 
 def assemble(topic: dict, content: str, seo: dict,
              affiliate_url: str = "", product_image: str = "") -> dict:
-    clean = re.sub(r"\ntags?:.*$", "", content, flags=re.IGNORECASE | re.MULTILINE).rstrip()
+    # JSON 래핑 잔재 제거 (LLM이 ```json { "improved_content": "..." } ``` 로 반환한 경우)
+    stripped = content.strip()
+    if stripped.startswith("```"):
+        stripped = re.sub(r"^```(?:json|markdown)?\s*", "", stripped, flags=re.IGNORECASE)
+        stripped = re.sub(r"\s*```$", "", stripped)
+    if stripped.lstrip().startswith("{") and '"improved_content"' in stripped[:300]:
+        try:
+            data = json.loads(re.search(r"\{[\s\S]+\}", stripped).group())  # type: ignore
+            stripped = data.get("improved_content", content)
+        except Exception:
+            pass
+    clean = re.sub(r"\ntags?:.*$", "", stripped, flags=re.IGNORECASE | re.MULTILINE).rstrip()
     clean = re.sub(r"^# .+\n?", "", clean).strip()
     clean = _strip_non_korean(clean)
     summary_match = re.match(r"^(.+?)(?:\n|$)", clean.strip())
