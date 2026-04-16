@@ -175,7 +175,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="#categories"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/80 px-6 py-3 text-sm font-medium text-gray-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700 hover:bg-white"
+                  className="inline-flex items-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-6 py-3 text-sm font-bold text-gray-800 shadow-sm transition hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50"
                 >
                   카테고리 둘러보기
                   <ArrowUpRight className="h-4 w-4" />
@@ -183,16 +183,18 @@ export default async function HomePage() {
               </div>
 
               {/* 통계 배지 */}
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-5 lg:justify-start">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 lg:justify-start">
                 {[
                   { value: "8개",    label: "카테고리" },
                   { value: "100+",   label: "추천 가이드" },
                   { value: "실시간", label: "가격 반영" },
-                ].map(({ value, label }) => (
+                ].map(({ value, label }, i, arr) => (
                   <div key={label} className="flex items-center gap-2">
                     <span className="text-base font-extrabold text-gray-900">{value}</span>
-                    <span className="text-xs text-gray-400">{label}</span>
-                    <span className="h-3 w-px bg-gray-200 last:hidden" />
+                    <span className="text-sm font-medium text-gray-600">{label}</span>
+                    {i < arr.length - 1 && (
+                      <span className="ml-2 h-4 w-px bg-gray-400" />
+                    )}
                   </div>
                 ))}
               </div>
@@ -215,7 +217,7 @@ export default async function HomePage() {
                 ))}
               </div>
               {/* 카드 하단 힌트 */}
-              <p className="mt-3 text-center text-[11px] text-gray-400">카드를 클릭하면 카테고리 추천으로 이동해요</p>
+              <p className="mt-3 text-center text-xs font-medium text-gray-500">카드를 클릭하면 카테고리 추천으로 이동해요</p>
             </div>
 
           </div>
