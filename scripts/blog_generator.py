@@ -53,6 +53,13 @@ try:
 except ImportError:
     _COUPANG_AVAILABLE = False
 
+# ── Google Trends ──────────────────────────────────────────────
+try:
+    from trend_fetcher import get_trending_topics
+    _TRENDS_AVAILABLE = True
+except ImportError:
+    _TRENDS_AVAILABLE = False
+
 # ── 로깅 ──────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
@@ -1048,6 +1055,8 @@ def main() -> None:
     parser.add_argument("--category",      type=str,  default=None,
                         choices=SITE_CATEGORIES,
                         help="특정 카테고리만 생성")
+    parser.add_argument("--trend",         action="store_true",
+                        help="Google Trends 기반 실시간 트렌드 토픽으로 생성")
     args = parser.parse_args()
 
     _PIPELINE_MODE = args.pipeline_mode
@@ -1069,11 +1078,39 @@ def main() -> None:
         log.info("카테고리 필터: %s", args.category)
     _emit(f"[PIPELINE:model={model}]")
 
+    # ── 트렌드 모드: 토픽 목록 미리 수집 ─────────────────────────
+    trend_topics: list[dict] = []
+    if args.trend:
+        if not _TRENDS_AVAILABLE:
+            log.error("[Trends] trend_fetcher 모듈 없음 — pip install pytrends")
+            sys.exit(1)
+        log.info("[Trends] Google Trends 관심도 분석 중...")
+        trend_topics = get_trending_topics(
+            category_filter=args.category,
+            limit=max(args.count, 5),
+            all_topics=TOPICS,
+        )
+        if not trend_topics:
+            log.warning("[Trends] 매핑된 트렌드 없음 — 고정 TOPICS 로 fallback")
+        else:
+            log.info("[Trends] 사용할 트렌드 토픽 %d개:", len(trend_topics))
+            for t in trend_topics[:args.count]:
+                score_str = f" (관심도 {t['trend_score']})" if t.get("trend_score") else ""
+                log.info("  · [%s] %s%s", t["category"], t["search_keyword"], score_str)
+
     for i in range(args.count):
         if i > 0:
             time.sleep(5)
-        topic = pick_topic(category_filter=args.category)
-        log.info("\n[%d/%d] 토픽: %s (%s)", i + 1, args.count, topic["title"], topic["category"])
+
+        # 트렌드 모드면 trend_topics 에서, 없으면 고정 TOPICS 에서
+        if args.trend and trend_topics:
+            topic = trend_topics[i % len(trend_topics)]
+        else:
+            topic = pick_topic(category_filter=args.category)
+
+        log.info("\n[%d/%d] 토픽: %s (%s)%s",
+                 i + 1, args.count, topic["title"], topic["category"],
+                 " [TREND]" if topic.get("is_trend") else "")
         _emit(f"[PIPELINE:topic_title={topic['title']}]")
         run_pipeline(topic, model, dry_run=args.dry_run, resume_stage=args.stage)
 
