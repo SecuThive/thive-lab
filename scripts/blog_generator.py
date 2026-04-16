@@ -92,8 +92,8 @@ HISTORY_FILE = Path(__file__).parent / ".blog_history.json"
 COUPANG_API_LOG = Path(__file__).parent / ".coupang_api_log.json"
 COUPANG_HOURLY_LIMIT = 10
 HISTORY_KEEP = 30
-MIN_QUALITY_SCORE = 65
-MAX_WRITE_RETRY   = 2
+MIN_QUALITY_SCORE = 72
+MAX_WRITE_RETRY   = 3
 
 # ── 사이트 카테고리 (UI와 동일하게 유지) ──────────────────────
 SITE_CATEGORIES = ["가전/IT", "생활용품", "주방", "뷰티/헬스", "스포츠", "아이디어", "유아/교육", "식품"]
@@ -599,6 +599,8 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
 - 수집된 상품 수보다 많은 TOP N 표기
 - /blog/, /review/ 등 내부 사이트 링크 생성 금지 (존재하지 않는 URL 절대 삽입 금지)
 - 쿠팡 상품 데이터에 없는 가상의 제품명·가격·스펙 작성 금지
+- LaTeX/수식 문법 절대 금지 ($\rightarrow$, $\leftrightarrow$, $\leq$ 등) — 화살표는 →, ←, ↔ 유니코드 직접 사용
+- 동일 상품을 두 번 이상 독립 섹션(###)으로 작성 금지 — 상품당 섹션 1개만 허용
 
 [가격 표기 규칙 — 반드시 준수]
 - 본문에 표기하는 가격은 반드시 '판매가(할인가)' 사용 (위 데이터의 '판매가(할인가, 본문에 표기할 가격)' 항목)
@@ -667,25 +669,54 @@ def stage_quality(draft: str, analysis: dict, model: str) -> tuple[str, int]:
     user = f"""타깃 페르소나: {analysis.get('target_buyer', '일반 소비자')}
 롱테일 키워드: {longtail}
 
-아래 10개 기준(각 10점, 총 100점)으로 초고를 검토하고 개선된 최종본을 JSON으로 반환하세요.
+아래 15개 기준으로 초고를 검토하고 개선된 최종본을 JSON으로 반환하세요.
+각 항목은 점수뿐 아니라 실제로 수정해서 improved_content에 반영해야 합니다.
 
-━━ 심리 동선 체크 (5항목) ━━
-1. [공감] 도입부가 독자의 고민을 공감하며 시작하는가? (10점)
-2. [정보] 전반부에서 상품명 없이 객관적 기준만 제시하는가? (10점)
-3. [등장] 중후반부에서 상품이 기준에 부합하는 예시로 자연스럽게 등장하는가? (10점)
-4. [진솔] '최고/최저가/강력 추천' 없이 장단점이 균형 있게 서술되는가? (10점)
-5. [CTA] 단점 설명 직후 + 결론부에 적절히 CTA가 배치되었는가? (10점)
+━━ 콘텐츠 품질 (6항목, 각 8점) ━━
+1. [공감] 도입부 첫 문단이 독자의 구체적 고민·상황을 공감하며 시작하는가?
+   → 아니면: 공감 문장 추가 또는 강화
+2. [정보] 전반부(H2 1~2개)에서 상품명 없이 선택 기준·체크리스트만 제시하는가?
+   → 아니면: 전반부에 상품명이 등장하면 "A제품" 등 익명으로 처리
+3. [진솔] 각 상품 섹션에 장점과 단점이 균형 있게 서술되는가? (단점 생략 금지)
+   → 아니면: 단점 없는 섹션에 현실적 한계점 추가
+4. [결론] 결론부에 "이런 분에게 적합 / 이런 분은 다른 선택이 나을 수 있음" 형태가 있는가?
+   → 아니면: 결론부에 추가
+5. [가독성] 한 문단이 5문장(약 200자) 이하로 청킹되어 있는가?
+   → 아니면: 긴 문단을 분리
+6. [자연스러움] "~인 것 같습니다", "솔직히 말씀드리면" 등 불필요한 표현이 없는가?
+   → 아니면: 자연스러운 표현으로 교체
 
-━━ GEO/SEO 체크 (5항목) ━━
-6. [즉답] 첫 2~3문단에 검색 의도에 대한 명확한 즉답이 있는가? (10점)
-7. [Q&A] H2/H3 소제목이 질문 형태로 작성되었는가? (10점)
-8. [구조화] 리스트 1개 이상 + 비교표 1개 이상 포함되었는가? (10점)
-9. [키워드] 롱테일 키워드 '{longtail}'이 제목/첫문단/소제목에 자연스럽게 녹아있는가? (10점)
-10. [분량] 최소 1500자 이상이며, 문단이 150~300단어 이내로 청킹되었는가? (10점)
+━━ 마케팅·신뢰도 (3항목, 각 8점) ━━
+7. [광고성] "최저가", "강력 추천", "압도적", "갓성비" 등 과장 표현이 없는가?
+   → 아니면: 구체적 수치·근거로 교체 (예: "리뷰 12,400개 기준 평점 4.8")
+8. [근거] 상품 설명에 평점·리뷰 수·가격 등 구체적 수치가 포함되는가?
+   → 아니면: 수치 데이터 추가
+9. [CTA] 각 상품 섹션 끝에 구매 링크가 배치되고, 결론부에도 대표 상품 CTA가 있는가?
+   → 아니면: 누락된 위치에 CTA 추가
+
+━━ SEO·구조 (4항목, 각 7점) ━━
+10. [즉답] 첫 2~3문단(60단어 이내)에 검색 의도에 대한 명확한 즉답이 역피라미드로 배치되는가?
+    → 아니면: 결론을 도입부로 이동
+11. [키워드] 롱테일 키워드 '{longtail}'이 제목·첫문단·H2 소제목 중 최소 2곳에 자연스럽게 포함되는가?
+    → 아니면: 소제목 또는 첫문단에 키워드 자연 삽입
+12. [구조화] 비교표(Table) 1개 이상 + 리스트(bullet) 2개 이상 포함되는가?
+    → 아니면: 누락된 구조 추가
+13. [헤딩] H2 3개 이상, H3는 소개하는 상품 수와 동일한가?
+    → 아니면: 헤딩 구조 조정
+
+━━ 완성도 (2항목, 각 4점) ━━
+14. [분량] 공백 제외 1800자 이상인가?
+    → 아니면: 부족한 섹션 보강
+15. [태그] 마지막 줄에 "tags: 태그1, 태그2, ..." 형식이 있는가?
+    → 아니면: 관련 태그 5개 추가
+
+총점 = 100점. 각 항목 문제를 실제로 수정한 후 improved_content에 반영하세요.
+문제가 없는 항목은 원문 그대로 유지하세요. 내용을 임의로 요약·생략하지 마세요.
 
 JSON 형식:
 {{
   "score": 75,
+  "issues": ["3번 단점 누락 — 섹션 A에 단점 추가", "7번 '강력 추천' 표현 제거"],
   "improved_content": "개선된 전체 본문 (마크다운, tags 줄 포함)"
 }}
 
@@ -707,6 +738,10 @@ JSON 형식:
         if m:
             data = json.loads(m.group())
             score = int(data.get("score", 70))
+            issues = data.get("issues", [])
+            if issues:
+                for iss in issues[:8]:
+                    log.info("  [품질이슈] %s", iss)
             content = data.get("improved_content", "")
             # 개선 내용이 원본의 60% 미만이면 truncation으로 인한 손실로 판단 → 원본 유지
             if content and len(content) > 200 and len(content) >= len(draft) * 0.6:
@@ -799,8 +834,23 @@ def stage_seo(topic: dict, content: str, analysis: dict, model: str,
 
 # 금지 표현 목록
 _BANNED_EXPRESSIONS: dict[str, list[str]] = {
-    "광고성 과장": ["최저가", "강력 추천", "무조건 사야", "반드시 사야", "압도적"],
-    "1인칭 체험": ["직접 써봤다", "사용해보니", "구매해서 써봤습니다", "제가 직접"],
+    "광고성 과장": [
+        "최저가", "강력 추천", "무조건 사야", "반드시 사야", "압도적",
+        "독보적", "넘사벽", "레전드", "갓성비", "무조건 추천", "강추",
+        "이것만 사세요", "최강", "완벽한 제품", "흠잡을 데 없",
+    ],
+    "1인칭 체험": [
+        "직접 써봤다", "사용해보니", "구매해서 써봤습니다", "제가 직접",
+        "써본 결과", "실제로 써보니", "제 경험상", "저도 쓰고 있",
+    ],
+    "허위·과장 정보": [
+        "임상 시험", "의학적으로 증명", "특허 받은", "세계 최초",
+        "국내 유일", "의사 추천", "전문가 인증",
+    ],
+    "불필요한 어미·표현": [
+        "~인 것 같습니다", "~인 것 같아요", "어떨까 싶습니다",
+        "참고로 말씀드리면", "솔직히 말씀드리면",
+    ],
 }
 
 
@@ -844,11 +894,96 @@ def stage_review(content: str, products: list[dict]) -> tuple[str, dict]:
     if fixed != before:
         report["fixed"].append("테이블 셀 내부 개행 제거")
 
-    # 5. (금지 표현 자동 교체는 한국어 문맥 오염 위험으로 경고만 처리 — 아래 #9에서 감지)
+    # 5. LaTeX 수식 기호 → 유니코드 치환 (LLM이 $\rightarrow$ 등을 쓰는 경우)
+    latex_map = {
+        r'$\leftrightarrow$': '↔', r'$\rightarrow$': '→', r'$\leftarrow$': '←',
+        r'$\uparrow$': '↑',        r'$\downarrow$': '↓', r'$\Rightarrow$': '⇒',
+        r'$\Leftarrow$': '⇐',      r'$\leq$': '≤',        r'$\geq$': '≥',
+        r'$\neq$': '≠',             r'$\approx$': '≈',     r'$\times$': '×',
+    }
+    before = fixed
+    for latex, uni in latex_map.items():
+        fixed = fixed.replace(latex, uni)
+    # 남은 $...$ 패턴 제거 (인라인 수식)
+    fixed = re.sub(r'\$[^$\n]{1,40}\$', lambda m: m.group().strip('$'), fixed)
+    if fixed != before:
+        report["fixed"].append("LaTeX 수식 기호 유니코드로 치환")
+
+    # 5b. 중복 H3 섹션 제거 (동일 제목 또는 동일 상품 구매링크가 반복되는 경우)
+    before = fixed
+    seen_headings: set[str] = set()
+    seen_buy_urls: set[str] = set()
+    lines = fixed.split('\n')
+    result_lines: list[str] = []
+    skip_until_next_h3 = False
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith('### '):
+            heading_key = re.sub(r'[^\w가-힣]', '', line.lower())
+            if heading_key in seen_headings:
+                # 이 섹션 전체를 다음 ### 또는 ## 또는 *** 까지 스킵
+                skip_until_next_h3 = True
+                i += 1
+                continue
+            seen_headings.add(heading_key)
+            skip_until_next_h3 = False
+        elif skip_until_next_h3 and re.match(r'^#{2,3} |^\*{3}$', line):
+            skip_until_next_h3 = False
+
+        if not skip_until_next_h3:
+            # 동일 구매 URL 중복 링크도 제거 (같은 URL이 2번 이상 CTA로 등장)
+            buy_url_match = re.search(r'\[🛒[^\]]*\]\((https?://[^\)]+)\)', line)
+            if buy_url_match:
+                url = buy_url_match.group(1)
+                if url in seen_buy_urls:
+                    i += 1
+                    continue
+                seen_buy_urls.add(url)
+            result_lines.append(line)
+        i += 1
+    fixed = '\n'.join(result_lines)
+    if fixed != before:
+        report["fixed"].append("중복 H3 섹션 또는 중복 구매링크 제거")
+
+    # 6. Raw 쿠팡 URL → 마크다운 링크로 자동 래핑
+    before = fixed
+    def _wrap_raw_url(m: re.Match) -> str:
+        url = m.group(0)
+        return f"[쿠팡에서 보기]({url})"
+    # 이미 링크 안에 있는 URL은 제외하고, 줄 단독으로 노출된 쿠팡 URL만 래핑
+    fixed = re.sub(
+        r'(?<!\()(?<!\[)(https?://(?:link\.coupang\.com|ads-partners\.coupang\.com)/[^\s\)\"\'\>]+)',
+        _wrap_raw_url, fixed
+    )
+    if fixed != before:
+        report["fixed"].append("Raw 쿠팡 URL 마크다운 링크로 자동 래핑")
+
+    # 7. ** 강조 미닫힘 자동 수정 (홀수 개 → 마지막 줄 끝에 ** 추가)
+    before = fixed
+    bold_count = len(re.findall(r'\*\*', fixed))
+    if bold_count % 2 != 0:
+        # 마지막 ** 뒤에 닫는 ** 추가
+        fixed = fixed.rstrip() + "**"
+        report["fixed"].append("** 마크다운 강조 미닫힘 자동 수정")
+
+    # 8. 가격 표기 일관성 — "숫자원" → "숫자,000원" 콤마 추가
+    before = fixed
+    def _fix_price(m: re.Match) -> str:
+        digits = m.group(1)
+        if len(digits) >= 4 and ',' not in digits:
+            return f"{int(digits):,}원"
+        return m.group(0)
+    fixed = re.sub(r'(\d{4,})원', _fix_price, fixed)
+    if fixed != before:
+        report["fixed"].append("가격 표기 콤마 자동 삽입")
+
+    # (금지 표현 자동 교체는 한국어 문맥 오염 위험으로 경고만 처리 — 아래에서 감지)
 
     # ── Warnings ─────────────────────────────────────────────
 
-    # 6. Raw URL (마크다운 링크로 감싸지 않은 URL)
+    # 9. Raw URL 잔존 체크 (쿠팡 외 raw URL)
+    # (이미 위에서 쿠팡 URL은 래핑했으므로 나머지만 체크)
     raw_urls = re.findall(
         r'(?<!\()(?<!\[)(?<!image:\s)https?://[^\s\)\"\'\>]+(?!\))', fixed
     )
@@ -927,10 +1062,46 @@ def stage_review(content: str, products: list[dict]) -> tuple[str, dict]:
             f"내부 /blog/ 링크 {len(internal)}개 감지 (존재하지 않는 URL 가능성)"
         )
 
-    # 14. 미닫힌 마크다운 강조 (**) 홀수 감지
+    # W7. ** 강조 미닫힘 잔존 체크 (auto-fix 후에도 남은 경우)
     bold_markers = len(re.findall(r'\*\*', fixed))
     if bold_markers % 2 != 0:
         report["warnings"].append("** 마크다운 강조 미닫힘 감지 (렌더링 오류 가능성)")
+    else:
+        report["passed"].append("마크다운 강조 정상 닫힘 ✓")
+
+    # W8. 결론부 존재 여부
+    conclusion_keywords = ["이런 분", "이런 경우", "결론", "최종 정리", "어떤 분", "추천 대상"]
+    if any(kw in fixed for kw in conclusion_keywords):
+        report["passed"].append("결론부 존재 ✓")
+    else:
+        report["warnings"].append("결론부 누락 — '이런 분에게 적합/이런 분은 다른 선택' 형태 결론 권장")
+
+    # W9. H3 수 vs 상품 수 불일치
+    if products:
+        h3_count = len(re.findall(r'^### ', fixed, re.MULTILINE))
+        if h3_count < len(products):
+            report["warnings"].append(
+                f"H3 섹션 {h3_count}개 < 상품 {len(products)}개 (일부 상품 섹션 누락 가능)"
+            )
+        else:
+            report["passed"].append(f"H3 섹션 {h3_count}개 / 상품 {len(products)}개 ✓")
+
+    # W10. 과도하게 긴 단락 감지 (300자 초과 단락)
+    paragraphs = [p for p in fixed.split('\n\n') if p.strip() and not p.strip().startswith('#') and not p.strip().startswith('|')]
+    long_paras = [p[:40] for p in paragraphs if len(re.sub(r'\s', '', p)) > 300]
+    if long_paras:
+        report["warnings"].append(
+            f"과도하게 긴 단락 {len(long_paras)}개 감지 (300자 초과, 모바일 가독성 저하): "
+            + repr(long_paras[0]) + "..."
+        )
+    else:
+        report["passed"].append("단락 길이 적절 ✓")
+
+    # W11. tags 줄 존재 여부
+    if re.search(r'^tags\s*:', fixed, re.MULTILINE | re.IGNORECASE):
+        report["passed"].append("tags 줄 존재 ✓")
+    else:
+        report["warnings"].append("tags 줄 누락 — 마지막 줄에 'tags: 태그1, 태그2, ...' 형식 필요")
 
     # ── 검수 결과 로그 ────────────────────────────────────────
     for msg in report["fixed"]:
