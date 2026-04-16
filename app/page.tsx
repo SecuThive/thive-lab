@@ -276,8 +276,6 @@ export default async function HomePage() {
                     <p className="text-xs font-bold text-gray-800">추천 코드 혜택</p>
                     <p className="text-[11px] text-gray-500 mt-0.5">
                       신규 가입 시 <span className="font-bold text-amber-600">3,000원 즉시 할인</span>
-                      <span className="mx-1 text-gray-300">·</span>
-                      추천인 <span className="font-bold text-amber-600">5,000 핀 적립</span>
                     </p>
                   </div>
                 </div>
