@@ -127,16 +127,38 @@ export default function BlogContent({
                 {children}
               </td>
             ),
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                className="text-amber-600 underline underline-offset-2 decoration-amber-400/50 hover:text-amber-500 transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {children}
-              </a>
-            ),
+            a: ({ href, children }) => {
+              const text = String(children ?? "");
+              const isBuyLink =
+                text.includes("구매") ||
+                text.includes("쿠팡") ||
+                text.includes("보러가기") ||
+                text.includes("바로가기") ||
+                text.includes("주문하기");
+              if (isBuyLink) {
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-black shadow-md shadow-amber-300/40 transition hover:bg-amber-400 active:scale-95 no-underline my-1"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5 flex-shrink-0" />
+                    {children}
+                  </a>
+                );
+              }
+              return (
+                <a
+                  href={href}
+                  className="text-amber-600 underline underline-offset-2 decoration-amber-400/50 hover:text-amber-500 transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {children}
+                </a>
+              );
+            },
             img: ({ src, alt }) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={src} alt={alt ?? ""} className="rounded-2xl max-w-full my-6 border border-gray-100 shadow-sm" loading="lazy" />
