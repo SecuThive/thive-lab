@@ -1003,17 +1003,42 @@ def stage_review(content: str, products: list[dict]) -> tuple[str, dict]:
     if fixed != before:
         report["fixed"].append("테이블 셀 내부 개행 제거")
 
-    # 5. LaTeX 수식 기호 → 유니코드 치환 (LLM이 $\rightarrow$ 등을 쓰는 경우)
+    # 5. LaTeX 수식 기호 → 유니코드 치환
+    #
+    # LLM이 LaTeX 명령어를 세 가지 형태로 출력할 수 있음:
+    #   A) $\rightarrow$   — 달러 기호 포함 (raw string으로 매핑)
+    #   B) \rightarrow     — 달러 없이 백슬래시 그대로 (raw string으로 매핑)
+    #   C) JSON 파싱 후 \r → CR(0x0D), \n → LF, \t → TAB 으로 변환된 케이스
+    #      예: \rightarrow → CR + "ightarrow" → 브라우저에서 "ightarrow"만 노출
+    before = fixed
+
+    # A+B: 달러 유무 × 백슬래시 그대로인 경우
     latex_map = {
         r'$\leftrightarrow$': '↔', r'$\rightarrow$': '→', r'$\leftarrow$': '←',
         r'$\uparrow$': '↑',        r'$\downarrow$': '↓', r'$\Rightarrow$': '⇒',
         r'$\Leftarrow$': '⇐',      r'$\leq$': '≤',        r'$\geq$': '≥',
         r'$\neq$': '≠',             r'$\approx$': '≈',     r'$\times$': '×',
+        r'\rightarrow':  '→',  r'\leftarrow':  '←',  r'\leftrightarrow': '↔',
+        r'\Rightarrow':  '⇒',  r'\Leftarrow':  '⇐',
+        r'\uparrow':     '↑',  r'\downarrow':  '↓',
+        r'\leq':         '≤',  r'\geq':        '≥',
+        r'\approx':      '≈',
     }
-    before = fixed
     for latex, uni in latex_map.items():
         fixed = fixed.replace(latex, uni)
-    # 남은 $...$ 패턴 제거 (인라인 수식)
+
+    # C: JSON 파싱으로 이미 escape 문자로 바뀐 케이스
+    #    \r(CR)+ightarrow, \n(LF)+eq, \t(TAB)+imes, \t(TAB)+o (→ \to)
+    escape_map = {
+        '\rightarrow':  '→',   # \r = CR(0x0D)
+        '\neq':         '≠',   # \n = LF(0x0A)
+        '\times':       '×',   # \t = TAB(0x09)
+        '\to':          '→',   # \t = TAB + o
+    }
+    for esc, uni in escape_map.items():
+        fixed = fixed.replace(esc, uni)
+
+    # 남은 $...$ 패턴 달러 기호만 제거
     fixed = re.sub(r'\$[^$\n]{1,40}\$', lambda m: m.group().strip('$'), fixed)
     if fixed != before:
         report["fixed"].append("LaTeX 수식 기호 유니코드로 치환")
