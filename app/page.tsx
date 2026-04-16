@@ -5,7 +5,6 @@ import {
   Flame,
   ShoppingBag,
   Star,
-  Tag,
   Zap,
   Tv,
   Home,
@@ -114,75 +113,117 @@ export default async function HomePage() {
     <main className="min-h-screen">
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-4 pb-16 pt-14 lg:px-8">
-        {/* 배경 글로우 */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-amber-400/6 via-transparent to-transparent"
-        />
+      <section className="relative overflow-hidden">
+        {/* 배경 레이어 */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-orange-50/40" />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-200/60 to-transparent" />
+        {/* 우상단 장식 원 */}
+        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-gradient-to-br from-amber-200/30 to-orange-200/20 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -left-16 top-1/2 h-56 w-56 rounded-full bg-gradient-to-br from-amber-100/40 to-transparent blur-2xl" />
 
-        <div className="mx-auto max-w-4xl text-center">
-          {/* 뱃지 */}
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-xs font-medium text-amber-700">
-            <Flame className="h-3.5 w-3.5" />
-            <span>쿠팡 실구매자 데이터 기반 추천</span>
-          </div>
+        <div className="mx-auto max-w-6xl px-4 py-16 lg:px-8 lg:py-24">
+          <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
 
-          <h1 className="mb-5 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-            뭘 사야 할지 모를 때<br />
-            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-              딱 정리해 드립니다
-            </span>
-          </h1>
+            {/* ── 왼쪽: 텍스트 ──────────────────────────────────── */}
+            <div className="flex-1 text-center lg:text-left">
 
-          <p className="mx-auto mb-8 max-w-xl text-base text-gray-500 leading-relaxed">
-            쿠팡 실구매자 평점·리뷰 수·가격 데이터를 분석해<br />
-            카테고리별 가성비 TOP 상품을 큐레이션합니다.
-          </p>
+              {/* 뱃지 */}
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-700 shadow-sm">
+                <Flame className="h-3.5 w-3.5 text-amber-500" />
+                쿠팡 실구매자 데이터 기반 추천
+              </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/blog"
-              className="btn-coupang text-sm"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              추천 상품 보기
-            </Link>
-            <Link
-              href="#categories"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:text-gray-900 shadow-sm"
-            >
-              카테고리 둘러보기
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 카테고리 그리드 ────────────────────────────────────────────────── */}
-      <section id="categories" className="px-4 pb-14 lg:px-8">
-        <div className="mx-auto max-w-5xl">
-          <SectionHeader
-            label="카테고리"
-            title="원하는 분야를 골라보세요"
-            icon={<Tag className="h-4 w-4 text-amber-500" />}
-          />
-
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-            {CATEGORIES.map(({ label, icon: Icon, color, bg, border }) => (
-              <Link
-                key={label}
-                href={`/blog?category=${encodeURIComponent(label)}`}
-                className={`group flex flex-col items-center gap-2 rounded-xl border p-3 text-center transition hover:scale-105 hover:shadow-md ${bg} ${border}`}
-              >
-                <span className={`rounded-lg p-2 ${bg}`}>
-                  <Icon className={`h-5 w-5 ${color}`} />
+              <h1 className="mb-5 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl lg:text-[3.25rem] lg:leading-tight">
+                뭘 사야 할지<br />
+                모를 때<br className="hidden sm:block" />
+                <span className="relative inline-block">
+                  <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 bg-clip-text text-transparent">
+                    딱 정리해 드립니다
+                  </span>
+                  {/* 밑줄 장식 */}
+                  <svg
+                    aria-hidden
+                    className="absolute -bottom-2 left-0 w-full"
+                    viewBox="0 0 300 8"
+                    fill="none"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M2 6 Q75 2 150 5 Q225 8 298 4" stroke="url(#ug)" strokeWidth="3" strokeLinecap="round" fill="none"/>
+                    <defs>
+                      <linearGradient id="ug" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#f59e0b"/>
+                        <stop offset="1" stopColor="#f97316"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
                 </span>
-                <span className={`text-xs font-medium ${color}`}>{label}</span>
-              </Link>
-            ))}
+              </h1>
+
+              <p className="mx-auto mb-8 max-w-md text-base leading-relaxed text-gray-500 lg:mx-0">
+                쿠팡 실구매자 평점·리뷰·가격 데이터를 분석해<br />
+                카테고리별 가성비 <strong className="font-semibold text-gray-700">TOP 상품</strong>을 큐레이션합니다.
+              </p>
+
+              {/* CTA 버튼 */}
+              <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <Link
+                  href="/blog"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-sm font-bold text-black shadow-lg shadow-amber-400/35 transition hover:bg-amber-400 hover:shadow-amber-400/50 active:scale-95"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  추천 상품 보기
+                </Link>
+                <Link
+                  href="#categories"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white/80 px-6 py-3 text-sm font-medium text-gray-600 shadow-sm transition hover:border-amber-300 hover:text-amber-700 hover:bg-white"
+                >
+                  카테고리 둘러보기
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {/* 통계 배지 */}
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-5 lg:justify-start">
+                {[
+                  { value: "8개",    label: "카테고리" },
+                  { value: "100+",   label: "추천 가이드" },
+                  { value: "실시간", label: "가격 반영" },
+                ].map(({ value, label }) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <span className="text-base font-extrabold text-gray-900">{value}</span>
+                    <span className="text-xs text-gray-400">{label}</span>
+                    <span className="h-3 w-px bg-gray-200 last:hidden" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── 오른쪽: 카테고리 카드 그리드 ──────────────────── */}
+            <div className="w-full max-w-sm shrink-0 lg:w-80">
+              <div className="grid grid-cols-2 gap-2.5">
+                {CATEGORIES.slice(0, 8).map(({ label, icon: Icon, color, bg, border }) => (
+                  <Link
+                    key={label}
+                    href={`/blog?category=${encodeURIComponent(label)}`}
+                    className={`group flex items-center gap-2.5 rounded-2xl border px-4 py-3.5 transition hover:scale-[1.03] hover:shadow-md ${bg} ${border}`}
+                  >
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${bg} border ${border}`}>
+                      <Icon className={`h-4 w-4 ${color}`} />
+                    </span>
+                    <span className={`text-xs font-bold ${color}`}>{label}</span>
+                  </Link>
+                ))}
+              </div>
+              {/* 카드 하단 힌트 */}
+              <p className="mt-3 text-center text-[11px] text-gray-400">카드를 클릭하면 카테고리 추천으로 이동해요</p>
+            </div>
+
           </div>
         </div>
       </section>
+
+      {/* 카테고리 앵커 (Hero 내 카드와 연결) */}
+      <div id="categories" />
 
       {/* ── 구독핀 파트너스 배너 ───────────────────────────────────────────── */}
       <section className="px-4 pb-10 lg:px-8">
