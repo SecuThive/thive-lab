@@ -207,6 +207,7 @@ def format_products_for_prompt(products: list[CoupangProduct]) -> str:
             f"  · 정가(참고용, 본문에 직접 쓰지 말 것): {p.original_price:,}원",
             f"  · 할인율: {p.discount_rate}%" if p.discount_rate > 0 else "  · 할인율: 없음",
             f"  · 평점: {p.rating_str}",
+            f"  · 상품이미지: {p.product_image}" if p.product_image else "",
             f"  · 구매링크: {p.product_url}",
             "",
         ]

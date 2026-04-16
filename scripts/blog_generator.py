@@ -623,6 +623,8 @@ def stage_write(topic: dict, analysis: dict, outline: str, model: str,
 - 글의 전반부(1~2단계)에서는 특정 상품명 언급하지 않고 기준만 제시
 - 글의 중후반부(3단계)에서 수집된 상품 {len(products) if products else 0}개를 비교표로 자연스럽게 등장
 - 각 상품 개별 섹션(### 제품명): 실제 제품명, 실제 가격, 핵심 스펙, 장단점, 적합한 사용자 기재
+{"- 각 ### 상품 섹션 헤딩 바로 다음 첫 줄에 해당 상품 이미지를 마크다운 이미지 형식으로 삽입 (이미지 URL은 상품 데이터의 '상품이미지' 항목 사용):" if products else ""}
+{"  ![상품명](실제 product_image URL)  ← URL이 없으면 생략, 있으면 반드시 삽입" if products else ""}
 {"- 각 상품 섹션 끝에 반드시 아래 형식으로 구매 버튼 삽입 (절대 raw URL만 쓰지 말 것):" if products else "- 상품 데이터가 없으므로 구매 링크·CTA 버튼을 절대 생성하지 말 것. [텍스트](URL) 형식 링크 자체를 작성 금지:"}
 {"  [🛒 쿠팡에서 구매하기](실제 product_url)" if products else "  ← 링크 없음. 독자가 직접 검색하도록 안내 문구로 대체할 것."}
 {"- 비교표(Table) 구매링크 열에도 반드시 마크다운 링크 형식 사용:" if products else "- 비교표(Table)에 구매링크 열 추가 금지. URL 없이 특징/장단점 위주로 구성할 것:"}
@@ -792,6 +794,158 @@ def stage_seo(topic: dict, content: str, analysis: dict, model: str,
 
 
 # ══════════════════════════════════════════════════════════════
+# Stage 6 · 최종 검수
+# ══════════════════════════════════════════════════════════════
+
+# 금지 표현 목록
+_BANNED_EXPRESSIONS: dict[str, list[str]] = {
+    "광고성 과장": ["최저가", "강력 추천", "무조건 사야", "반드시 사야", "압도적"],
+    "1인칭 체험": ["직접 써봤다", "사용해보니", "구매해서 써봤습니다", "제가 직접"],
+}
+
+
+def stage_review(content: str, products: list[dict]) -> tuple[str, dict]:
+    """
+    파이프라인 마지막 자동 검수 단계.
+
+    처리 순서:
+      Auto-fix  : 규칙 기반으로 확실히 수정 가능한 문제를 자동 교정
+      Warnings  : 자동 수정 불가 or 판단이 필요한 항목 경고 로그
+      Passed    : 정상 확인 항목 (로그 확인용)
+
+    Returns:
+        (fixed_content, report)  — report = {fixed, warnings, passed}
+    """
+    t0 = _stage_start("review")
+    report: dict[str, list[str]] = {"fixed": [], "warnings": [], "passed": []}
+    fixed = content
+
+    # ── Auto-fix ─────────────────────────────────────────────
+
+    # 1. ] (URL) 공백 → ](URL)
+    before = fixed
+    fixed = re.sub(r'\]\s+\(http', '](http', fixed)
+    if fixed != before:
+        n = len(re.findall(r'\]\s+\(http', before))
+        report["fixed"].append(f"깨진 링크 {n}건 수정 ('] URL' 공백 제거)")
+
+    # 2. 연속 빈 줄 3개 이상 → 2개
+    before = fixed
+    fixed = re.sub(r'\n{4,}', '\n\n\n', fixed)
+    if fixed != before:
+        report["fixed"].append("과다 빈 줄 압축 (3줄 이상 → 2줄)")
+
+    # 3. 줄 끝 불필요 공백 제거
+    fixed = re.sub(r'[ \t]+$', '', fixed, flags=re.MULTILINE)
+
+    # 4. 테이블 셀 안 개행 제거 (| 사이에 \n 이 있는 경우)
+    before = fixed
+    fixed = re.sub(r'(\|[^\n|]+)\n([^\n|]*\|)', r'\1 \2', fixed)
+    if fixed != before:
+        report["fixed"].append("테이블 셀 내부 개행 제거")
+
+    # 5. (금지 표현 자동 교체는 한국어 문맥 오염 위험으로 경고만 처리 — 아래 #9에서 감지)
+
+    # ── Warnings ─────────────────────────────────────────────
+
+    # 6. Raw URL (마크다운 링크로 감싸지 않은 URL)
+    raw_urls = re.findall(
+        r'(?<!\()(?<!\[)(?<!image:\s)https?://[^\s\)\"\'\>]+(?!\))', fixed
+    )
+    if raw_urls:
+        report["warnings"].append(
+            f"Raw URL {len(raw_urls)}개 감지 (마크다운 링크 미적용): "
+            + ", ".join(u[:60] for u in raw_urls[:3])
+        )
+    else:
+        report["passed"].append("모든 URL 마크다운 링크 형식 ✓")
+
+    # 7. 구매 링크 수 vs 상품 수
+    if products:
+        buy_links = len(re.findall(
+            r'\[.*?(?:구매|바로가기|보러가기|주문).*?\]\(https?://', fixed
+        ))
+        if buy_links == 0:
+            report["warnings"].append(
+                f"구매 링크 없음 (상품 {len(products)}개 대비 0개)"
+            )
+        elif buy_links < len(products):
+            report["warnings"].append(
+                f"구매 링크 {buy_links}개 < 상품 {len(products)}개 (일부 누락 가능)"
+            )
+        else:
+            report["passed"].append(f"구매 링크 {buy_links}개 ✓")
+
+    # 8. 분량 체크 (공백 제외 문자 수)
+    char_count = len(re.sub(r'\s', '', fixed))
+    if char_count < 1500:
+        report["warnings"].append(f"분량 부족: {char_count}자 (최소 1500자 권장)")
+    else:
+        report["passed"].append(f"분량 {char_count:,}자 ✓")
+
+    # 9. 금지 표현 감지 (자동 교체 대상이 아닌 나머지)
+    for category, expressions in _BANNED_EXPRESSIONS.items():
+        found = [e for e in expressions if e in fixed]
+        if found:
+            report["warnings"].append(f"{category} 표현 잔류: {', '.join(found)}")
+        else:
+            report["passed"].append(f"{category} 표현 없음 ✓")
+
+    # 10. 비교 테이블 포함 여부
+    if re.search(r'^\|.+\|.+\|', fixed, re.MULTILINE):
+        report["passed"].append("비교 테이블 포함 ✓")
+    else:
+        report["warnings"].append("비교 테이블 없음 (구조화 데이터 부재 → SEO 감점 가능)")
+
+    # 11. H2 헤딩 수
+    h2_count = len(re.findall(r'^## ', fixed, re.MULTILINE))
+    if h2_count >= 3:
+        report["passed"].append(f"H2 헤딩 {h2_count}개 ✓")
+    else:
+        report["warnings"].append(f"H2 헤딩 {h2_count}개 (최소 3개 권장)")
+
+    # 12. 상품별 이미지 삽입 확인
+    if products:
+        missing_imgs = [
+            p.get('product_name', '')[:20]
+            for p in products
+            if p.get('product_image') and p['product_image'] not in fixed
+        ]
+        if missing_imgs:
+            report["warnings"].append(
+                f"이미지 미삽입 상품 {len(missing_imgs)}개: {', '.join(missing_imgs)}"
+            )
+        else:
+            img_count = sum(1 for p in products if p.get('product_image'))
+            if img_count:
+                report["passed"].append(f"전체 상품 이미지 삽입 확인 ({img_count}개) ✓")
+
+    # 13. 존재하지 않는 내부 링크 감지
+    internal = re.findall(r'\(/blog/[^\)]+\)', fixed)
+    if internal:
+        report["warnings"].append(
+            f"내부 /blog/ 링크 {len(internal)}개 감지 (존재하지 않는 URL 가능성)"
+        )
+
+    # 14. 미닫힌 마크다운 강조 (**) 홀수 감지
+    bold_markers = len(re.findall(r'\*\*', fixed))
+    if bold_markers % 2 != 0:
+        report["warnings"].append("** 마크다운 강조 미닫힘 감지 (렌더링 오류 가능성)")
+
+    # ── 검수 결과 로그 ────────────────────────────────────────
+    for msg in report["fixed"]:
+        log.info("  [검수✓ Fix] %s", msg)
+    for msg in report["warnings"]:
+        log.warning("  [검수⚠ Warn] %s", msg)
+    log.info(
+        "  검수 완료 — 수정 %d건 / 경고 %d건 / 통과 %d항목",
+        len(report["fixed"]), len(report["warnings"]), len(report["passed"]),
+    )
+    _stage_done("review", t0)
+    return fixed, report
+
+
+# ══════════════════════════════════════════════════════════════
 # 결과 조립 & Supabase 저장
 # ══════════════════════════════════════════════════════════════
 
@@ -859,6 +1013,144 @@ def _fix_md_tables(text: str) -> str:
     return '\n'.join(out)
 
 
+def _is_section_heading(stripped: str) -> bool:
+    """섹션 헤딩 줄 여부 — ##/###, 이모지+공백, **bold** 형식"""
+    if not stripped:
+        return False
+    first_cp = ord(stripped[0])
+    return (
+        bool(re.match(r'^#{2,4}\s', stripped)) or
+        (first_cp >= 0x2300 and len(stripped) >= 2 and stripped[1] == ' ') or
+        (stripped.startswith('**') and stripped.endswith('**') and len(stripped) > 4)
+    )
+
+
+def _inject_product_images(text: str, products: list[dict]) -> str:
+    """
+    각 상품 섹션 직전에 이미지 1개 삽입. 3단계 전략으로 누락 최소화.
+
+    전략 우선순위 (상품당 최초 성공 전략 사용):
+      1순위 — product_url 역추적
+                구매 링크 URL이 포함된 줄에서 위로 올라가
+                가장 가까운 섹션 헤딩을 삽입 위치로 결정
+      2순위 — 상품명 10자 접두어 매칭
+                헤딩 줄에서 product_name[:10] 포함 여부
+      3순위 — 핵심 단어(4자 이상) 매칭
+                product_name의 단어 중 하나라도 헤딩에 포함
+
+    중복 방지: 상품당 1회, 기존 이미지 줄은 0단계에서 모두 제거.
+    """
+    if not products:
+        return text
+
+    image_urls = {p.get('product_image', '') for p in products if p.get('product_image')}
+    if not image_urls:
+        return text
+
+    # ── 0단계: 기존 상품 이미지 줄 전부 제거 ────────────────────
+    lines = text.split('\n')
+    cleaned: list[str] = []
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        if stripped.startswith('![') and any(url in stripped for url in image_urls):
+            if cleaned and not cleaned[-1].strip():
+                cleaned.pop()
+            i += 1
+            if i < len(lines) and not lines[i].strip():
+                i += 1
+            continue
+        cleaned.append(lines[i])
+        i += 1
+
+    # ── 헤딩 스코어링 헬퍼 ───────────────────────────────────────
+    def _score_heading(heading: str, name: str) -> int:
+        """헤딩이 상품명과 얼마나 일치하는지 점수 반환 (높을수록 좋음)"""
+        score = 0
+        tokens = [w for w in re.split(r'[\s,\(\)\[\]/·]+', name) if len(w) >= 2]
+        for t in tokens:
+            if t in heading:
+                score += len(t)  # 긴 토큰일수록 가중치 높음
+        return score
+
+    # ── 1~2순위: 상품별 삽입 위치(줄 인덱스) 결정 ───────────────
+    # insertions: {heading_line_idx: (img_url, img_alt)}
+    insertions: dict[int, tuple[str, str]] = {}
+    used_headings: set[int] = set()
+
+    for p in products:
+        img_url     = p.get('product_image', '')
+        product_url = p.get('product_url', '')
+        name        = p.get('product_name', '')
+        img_alt     = name[:80].replace('[', '').replace(']', '')
+
+        if not img_url:
+            log.warning("  [이미지] URL 없음 — 건너뜀: %s", name[:40])
+            continue
+
+        heading_idx: int | None = None
+
+        # 1순위: product_url 역추적 (테이블 행 제외)
+        # 비교표 안의 구매 링크는 건너뛰고, 개별 섹션의 구매 링크만 사용
+        if product_url:
+            for li, line in enumerate(cleaned):
+                if product_url not in line:
+                    continue
+                if '|' in line:          # 테이블 셀 안의 URL → 건너뜀
+                    continue
+                # 위로 탐색 (최대 50줄) — 상품명 키워드 포함 헤딩 우선
+                best_ri: int | None  = None
+                best_score           = 0
+                for ri in range(li - 1, max(li - 50, -1), -1):
+                    s = cleaned[ri].strip()
+                    if not s:
+                        continue
+                    if _is_section_heading(s) and ri not in used_headings:
+                        sc = _score_heading(s, name)
+                        if sc > best_score:
+                            best_score = sc
+                            best_ri    = ri
+                        elif best_ri is None:
+                            best_ri = ri   # 점수 없어도 가장 가까운 헤딩 임시 저장
+                    # 다른 구매 버튼 만나면 영역 이탈 → 중단
+                    if re.search(r'쿠팡.*구매|구매.*쿠팡', s) and ri < li - 3:
+                        break
+                if best_ri is not None:
+                    heading_idx = best_ri
+                break  # 첫 번째 비-테이블 URL 줄만 처리
+
+        # 2순위: 전체 헤딩 스코어링 (이름 매칭 점수 최고 헤딩 선택)
+        # — Strategy 1 실패 또는 URL 없는 경우
+        if heading_idx is None:
+            best_idx   = None
+            best_score = 0
+            for li, line in enumerate(cleaned):
+                s = line.strip()
+                if not _is_section_heading(s) or li in used_headings:
+                    continue
+                sc = _score_heading(s, name)
+                if sc > best_score:
+                    best_score = sc
+                    best_idx   = li
+            if best_idx is not None and best_score > 0:
+                heading_idx = best_idx
+
+        if heading_idx is not None:
+            insertions[heading_idx] = (img_url, img_alt)
+            used_headings.add(heading_idx)
+            log.debug("  [이미지] 확정 (줄 %d): %s", heading_idx, name[:30])
+        else:
+            log.warning("  [이미지] 삽입 위치 미탐색: %s", name[:40])
+
+    # ── 이미지 삽입 (뒤 → 앞 순서로 인덱스 유지) ────────────────
+    for li in sorted(insertions.keys(), reverse=True):
+        img_url, img_alt = insertions[li]
+        cleaned.insert(li, '')
+        cleaned.insert(li, f"![{img_alt}]({img_url})")
+
+    return '\n'.join(cleaned)
+
+
 def _remove_orphan_links(text: str) -> str:
     """
     URL 없는 [텍스트] (마크다운 링크가 아닌 단순 대괄호) 를 텍스트만 남겨 제거.
@@ -870,7 +1162,8 @@ def _remove_orphan_links(text: str) -> str:
 
 
 def assemble(topic: dict, content: str, seo: dict,
-             affiliate_url: str = "", product_image: str = "") -> dict:
+             affiliate_url: str = "", product_image: str = "",
+             products: list[dict] | None = None) -> dict:
     # JSON 래핑 잔재 제거 (LLM이 ```json { "improved_content": "..." } ``` 로 반환한 경우)
     stripped = content.strip()
     if stripped.startswith("```"):
@@ -884,8 +1177,11 @@ def assemble(topic: dict, content: str, seo: dict,
             pass
     clean = re.sub(r"\ntags?:.*$", "", stripped, flags=re.IGNORECASE | re.MULTILINE).rstrip()
     clean = re.sub(r"^# .+\n?", "", clean).strip()
-    clean = _fix_md_tables(clean)        # 분할된 테이블 행 병합
-    clean = _remove_orphan_links(clean)  # URL 없는 [텍스트] 제거
+    clean = _fix_md_tables(clean)                         # 분할된 테이블 행 병합
+    clean = re.sub(r'\]\s+\(http', '](http', clean)      # ] (URL) → ](URL) 공백 버그 수정
+    clean = _remove_orphan_links(clean)                   # URL 없는 [텍스트] 제거
+    if products:
+        clean = _inject_product_images(clean, products)   # 상품 섹션 앞 이미지 삽입
     clean = _strip_non_korean(clean)
     summary_match = re.match(r"^(.+?)(?:\n|$)", clean.strip())
     summary = summary_match.group(1).strip() if summary_match else topic["title"]
@@ -969,7 +1265,7 @@ def run_pipeline(
     dry_run: bool = False,
     resume_stage: Optional[str] = None,
 ) -> dict:
-    STAGE_ORDER = ["products", "topic", "outline", "write", "quality", "seo"]
+    STAGE_ORDER = ["products", "topic", "outline", "write", "quality", "seo", "review"]
     state = load_state() if resume_stage else {}
     t_total = time.time()
 
@@ -1070,10 +1366,22 @@ def run_pipeline(
     save_state(state)
 
     assembled = assemble(topic, improved, seo,
-                         affiliate_url=affiliate_url, product_image=product_image)
-    elapsed   = round(time.time() - t_total, 1)
+                         affiliate_url=affiliate_url, product_image=product_image,
+                         products=state.get("products") or [])
 
-    _emit(f"[PIPELINE:done:score={quality_score}:elapsed={elapsed}:topic={topic['key']}]")
+    # Stage 6: 최종 검수
+    reviewed_content, review_report = stage_review(
+        assembled["content"],
+        products=state.get("products") or [],
+    )
+    if reviewed_content != assembled["content"]:
+        assembled["content"]      = reviewed_content
+        assembled["content_html"] = md_to_html(reviewed_content)
+
+    elapsed = round(time.time() - t_total, 1)
+
+    _emit(f"[PIPELINE:done:score={quality_score}:elapsed={elapsed}:topic={topic['key']}"
+          f":review_fixes={len(review_report['fixed'])}:review_warns={len(review_report['warnings'])}]")
 
     if dry_run:
         print("\n" + "═" * 65)
@@ -1088,6 +1396,7 @@ def run_pipeline(
         print(f"  상품링크 : {assembled['affiliate_url'] or '없음'}")
         print(f"  상품이미지: {assembled['product_image'] or '없음'}")
         print(f"  소요시간 : {elapsed}s")
+        print(f"  검수수정 : {len(review_report['fixed'])}건 / 경고 {len(review_report['warnings'])}건")
         print("─" * 65)
         print(assembled["content"][:1000], "\n…")
     else:
@@ -1096,11 +1405,13 @@ def run_pipeline(
         slug = unique_slug(slugify(raw_slug))
         save_to_supabase(topic, assembled, slug, quality_score)
         _save_history(topic["key"])
-        log.info("[완료] /blog/%s (score=%d, %.1fs, affiliate=%s)",
-                 slug, quality_score, elapsed, "✓" if affiliate_url else "✗")
+        log.info("[완료] /blog/%s (score=%d, %.1fs, affiliate=%s, 검수수정=%d건, 경고=%d건)",
+                 slug, quality_score, elapsed, "✓" if affiliate_url else "✗",
+                 len(review_report["fixed"]), len(review_report["warnings"]))
         assembled["slug"] = slug
 
-    assembled["quality_score"] = quality_score
+    assembled["quality_score"]  = quality_score
+    assembled["review_report"]  = review_report
     return assembled
 
 
