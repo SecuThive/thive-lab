@@ -200,45 +200,43 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 카테고리 앵커 (Hero 내 카드와 연결) */}
+      {/* 카테고리 앵커 */}
       <div id="categories" />
 
       {/* ── 구독핀 파트너스 배너 ───────────────────────────────────────────── */}
-      <section className="px-4 pb-10 lg:px-8">
+      <section className="bg-gray-50 px-4 py-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
+          {/* 섹션 구분 라벨 */}
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-gray-400">
+            파트너스 · Partners
+          </p>
           <a
             href="https://www.gudokpin.com/subscribe?ref=구독핀oeOkh"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex items-center gap-5 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-purple-50 to-indigo-50 px-6 py-5 transition hover:border-violet-300 hover:shadow-md hover:shadow-violet-100"
+            className="group flex items-center gap-5 rounded-2xl border border-violet-200 bg-white px-6 py-4 shadow-sm transition hover:border-violet-300 hover:shadow-md"
           >
-            {/* 배경 글로우 */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-violet-100/50 to-transparent"
-            />
-
             {/* 아이콘 */}
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-violet-200 bg-white text-lg font-black text-violet-600 shadow-sm">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-violet-50 border border-violet-200 text-base font-black text-violet-700">
               핀
             </div>
 
             {/* 텍스트 */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-sm font-bold text-gray-900">구독핀</span>
-                <span className="rounded-full border border-violet-200 bg-white px-2 py-0.5 text-[10px] font-medium text-violet-600">
+                <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700">
                   파트너스
                 </span>
               </div>
-              <p className="text-xs text-gray-500">
-                각종 구독 서비스를 한 곳에서 관리 — 추천 코드로 구매 시{" "}
-                <span className="font-semibold text-violet-600">3,000원 할인</span>
+              <p className="text-xs text-gray-600">
+                각종 구독 서비스를 한 곳에서 관리 — 추천 코드 적용 시{" "}
+                <span className="font-bold text-violet-700">3,000원 할인</span>
               </p>
             </div>
 
             {/* CTA */}
-            <div className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl border border-violet-300 bg-white px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm transition group-hover:bg-violet-50">
+            <div className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition group-hover:bg-violet-500">
               할인받기
               <ArrowUpRight className="h-3.5 w-3.5" />
             </div>
