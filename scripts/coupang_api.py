@@ -42,10 +42,16 @@ class CoupangProduct:
 
     @property
     def price_str(self) -> str:
-        s = f"{self.product_price:,}원"
+        """
+        LLM 프롬프트에 주입되는 가격 문자열.
+        현재 판매가(할인가)를 명확히 강조하고, 정가는 참고용으로만 표기.
+        """
         if self.discount_rate > 0 and self.original_price > self.product_price:
-            s += f" (정가 {self.original_price:,}원 → {self.discount_rate}% 할인)"
-        return s
+            return (
+                f"현재가 {self.product_price:,}원"
+                f" (정가 {self.original_price:,}원에서 {self.discount_rate}% 할인된 가격)"
+            )
+        return f"{self.product_price:,}원"
 
     @property
     def rating_str(self) -> str:
@@ -197,7 +203,9 @@ def format_products_for_prompt(products: list[CoupangProduct]) -> str:
         rocket = " [로켓배송]" if p.is_rocket else ""
         lines += [
             f"【상품 {i}】{p.product_name}{rocket}",
-            f"  · 가격: {p.price_str}",
+            f"  · 판매가(할인가, 본문에 표기할 가격): {p.product_price:,}원",
+            f"  · 정가(참고용, 본문에 직접 쓰지 말 것): {p.original_price:,}원",
+            f"  · 할인율: {p.discount_rate}%" if p.discount_rate > 0 else "  · 할인율: 없음",
             f"  · 평점: {p.rating_str}",
             f"  · 구매링크: {p.product_url}",
             "",
