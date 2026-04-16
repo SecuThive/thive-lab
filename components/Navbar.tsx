@@ -115,11 +115,11 @@ export default function Navbar() {
                 </button>
 
                 {/* 드롭다운 패널 — pt-2로 버튼과 틈새 없이 연결 */}
-                <div className="absolute left-1/2 top-full w-[320px] -translate-x-1/2 pt-2">
+                <div className={`absolute left-1/2 top-full w-[320px] -translate-x-1/2 pt-2 ${catOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
                   <div className={`transition-all duration-200 ${
                     catOpen
-                      ? "pointer-events-auto translate-y-0 opacity-100"
-                      : "pointer-events-none -translate-y-1 opacity-0"
+                      ? "translate-y-0 opacity-100"
+                      : "-translate-y-1 opacity-0"
                   }`}>
                   <div className="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.10)]">
                     {/* 헤더 */}
