@@ -184,6 +184,49 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── 구독핀 파트너스 배너 ───────────────────────────────────────────── */}
+      <section className="px-4 pb-10 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <a
+            href="https://www.gudokpin.com/subscribe?ref=구독핀oeOkh"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative flex items-center gap-5 overflow-hidden rounded-2xl border border-violet-500/25 bg-gradient-to-r from-violet-500/10 via-purple-500/8 to-indigo-500/10 px-6 py-5 transition hover:border-violet-500/40 hover:brightness-110"
+          >
+            {/* 배경 글로우 */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute right-0 top-0 h-full w-64 bg-gradient-to-l from-violet-500/8 to-transparent"
+            />
+
+            {/* 아이콘 */}
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-violet-500/30 bg-violet-500/15 text-lg font-black text-violet-300">
+              핀
+            </div>
+
+            {/* 텍스트 */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-bold text-white">구독핀</span>
+                <span className="rounded-full border border-violet-500/30 bg-violet-500/15 px-2 py-0.5 text-[10px] font-medium text-violet-300">
+                  파트너스
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400">
+                각종 구독 서비스를 한 곳에서 관리 — 추천 코드로 구매 시{" "}
+                <span className="font-semibold text-violet-300">3,000원 할인</span>
+              </p>
+            </div>
+
+            {/* CTA */}
+            <div className="flex-shrink-0 inline-flex items-center gap-2 rounded-xl border border-violet-500/35 bg-violet-500/18 px-4 py-2 text-sm font-semibold text-violet-200 transition group-hover:bg-violet-500/28">
+              할인받기
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </div>
+          </a>
+        </div>
+      </section>
+
       {/* ── 이번 주 HOT 상품 ───────────────────────────────────────────────── */}
       {hot.length > 0 && (
         <section className="px-4 pb-14 lg:px-8">
