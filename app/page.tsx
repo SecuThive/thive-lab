@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import ProductCard, { type Product } from "@/components/ProductCard";
-import ContactSection from "@/components/ContactSection";
+import ContactButton from "@/components/ContactButton";
 
 export const revalidate = 60;
 
@@ -372,8 +372,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── 문의하기 ──────────────────────────────────────────────────────── */}
-      <ContactSection />
+      {/* ── 문의하기 플로팅 버튼 ──────────────────────────────────────────── */}
+      <ContactButton />
 
       {/* ── 파트너스 고지 ─────────────────────────────────────────────────── */}
       <footer className="border-t border-gray-200 bg-gray-50 px-4 py-10 lg:px-8">
