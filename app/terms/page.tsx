@@ -34,7 +34,7 @@ export default function TermsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             이용약관
           </h1>
-          <p className="text-sm text-zinc-500">최종 수정일: 2026년 4월 14일</p>
+          <p className="text-sm text-zinc-500">최종 수정일: 2026년 4월 16일</p>
         </header>
 
         <div className="space-y-8 text-sm leading-relaxed text-zinc-300">
@@ -95,6 +95,24 @@ export default function TermsPage() {
               <li>게시된 가격 정보는 참고용이며 실제 구매가와 다를 수 있습니다.</li>
               <li>리뷰 내용은 운영자의 개인적인 사용 경험을 바탕으로 작성됩니다.</li>
               <li>제품 구매 전 쿠팡 상품 페이지에서 최신 정보를 반드시 확인하시기 바랍니다.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제4조의2 (AI 생성 콘텐츠 고지)
+            </h2>
+            <p>
+              사이트의 일부 콘텐츠(리뷰, 가이드, 상품 설명 등)는 AI(인공지능) 기술을 활용하여
+              작성될 수 있습니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>AI 생성 콘텐츠는 최대한 정확한 정보를 담도록 검수하지만, 일부 내용이
+                부정확하거나 최신 정보를 반영하지 못할 수 있습니다.</li>
+              <li>의료, 법률, 재무 등 전문 분야와 관련된 정보는 반드시 전문가의 조언을
+                병행하시기 바랍니다.</li>
+              <li>콘텐츠 내 오류를 발견하신 경우 운영자에게 신고해 주시면 신속히 검토 후
+                수정합니다.</li>
             </ul>
           </section>
 
@@ -174,7 +192,42 @@ export default function TermsPage() {
 
           <section className="space-y-2">
             <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
-              제11조 (문의처)
+              제11조의1 (금지 행위)
+            </h2>
+            <p>이용자는 사이트를 이용함에 있어 다음 행위를 해서는 안 됩니다.</p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>사이트 콘텐츠의 무단 스크래핑, 크롤링, 대량 복제</li>
+              <li>사이트 운영을 방해하는 악성 코드 배포 또는 해킹 시도</li>
+              <li>다른 이용자 또는 제3자를 사칭하거나 허위 정보를 유포하는 행위</li>
+              <li>스팸 문의 발송, 광고성 메시지를 통한 서비스 남용</li>
+              <li>관련 법령에 위반되는 모든 행위</li>
+            </ul>
+            <p className="mt-2">
+              금지 행위 적발 시 사이트 이용 제한 및 관련 법적 조치가 취해질 수 있습니다.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제11조의2 (광고 콘텐츠 고지)
+            </h2>
+            <p>
+              사이트에는 Google AdSense를 통해 제공되는 광고가 게재될 수 있습니다.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+              <li>광고는 Google AdSense 정책에 따라 자동으로 선정·게재되며, 운영자가
+                개별 광고 내용을 선별하지 않습니다.</li>
+              <li>광고 내용은 사이트의 추천 또는 보증을 의미하지 않으며, 광고주와의
+                이해관계가 콘텐츠의 객관성에 영향을 주지 않습니다.</li>
+              <li>광고 클릭 또는 광고 상품 구매 시 발생하는 모든 거래는 해당 광고주의
+                책임이며 Thive Lab은 이에 대해 책임을 지지 않습니다.</li>
+              <li>쿠팡 파트너스 제휴 링크가 포함된 콘텐츠는 별도로 그 사실을 명시합니다.</li>
+            </ul>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+              제12조 (문의처)
             </h2>
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-1 text-zinc-400">
               <p><span className="text-zinc-300 font-medium">운영자:</span> Thive Lab</p>
