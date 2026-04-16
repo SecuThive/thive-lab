@@ -9,17 +9,12 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* 헤더 글로우 */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 h-48 bg-gradient-to-b from-amber-500/6 via-transparent to-transparent"
-      />
+    <div className="min-h-screen bg-gray-50">
 
       <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
+          className="mb-8 inline-flex items-center gap-2 text-sm text-gray-500 transition hover:text-amber-500"
         >
           <ArrowLeft className="h-4 w-4" />
           홈으로 돌아가기
@@ -27,29 +22,29 @@ export default function TermsPage() {
 
         {/* 헤더 */}
         <header className="mb-10 space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-4 py-1.5 text-xs text-zinc-400">
-            <FileText className="h-3.5 w-3.5 text-amber-400" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-xs font-semibold text-amber-700">
+            <FileText className="h-3.5 w-3.5 text-amber-500" />
             법적 고지
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             이용약관
           </h1>
-          <p className="text-sm text-zinc-500">최종 수정일: 2026년 4월 16일</p>
+          <p className="text-sm text-gray-400">최종 수정일: 2026년 4월 16일</p>
         </header>
 
-        <div className="space-y-8 text-sm leading-relaxed text-zinc-300">
+        <div className="space-y-8 text-sm leading-relaxed text-gray-600">
 
           {/* 쿠팡 파트너스 고지 */}
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-5 py-4">
-            <p className="text-xs text-zinc-400">
-              <span className="font-semibold text-amber-400">쿠팡 파트너스 고지:</span>{" "}
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <p className="text-xs text-amber-800">
+              <span className="font-semibold">쿠팡 파트너스 고지:</span>{" "}
               이 사이트는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를
               제공받을 수 있습니다. 구매자에게는 추가 비용이 발생하지 않습니다.
             </p>
           </div>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제1조 (목적)
             </h2>
             <p>
@@ -59,14 +54,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제2조 (서비스 설명)
             </h2>
             <p>
               Thive Lab은 쿠팡 파트너스 제휴 기반의 상품 추천 및 리뷰 정보를 제공하는
               정보 공유 사이트입니다. 사이트에서 제공하는 주요 서비스는 다음과 같습니다.
             </p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>카테고리별 제품 추천 및 비교 리뷰 콘텐츠 제공</li>
               <li>쿠팡 최저가 구매 링크 안내 (파트너스 제휴 링크 포함)</li>
               <li>HOT 딜 및 에디터 픽 상품 정보 제공</li>
@@ -74,7 +69,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제3조 (이용 조건)
             </h2>
             <p>
@@ -84,14 +79,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제4조 (콘텐츠 및 정보 정확성)
             </h2>
             <p>
               사이트에 게재된 제품 정보, 가격, 리뷰 내용은 작성 시점을 기준으로 하며,
               실제 판매 가격 및 제품 사양은 쿠팡 등 판매 플랫폼에서 변경될 수 있습니다.
             </p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>게시된 가격 정보는 참고용이며 실제 구매가와 다를 수 있습니다.</li>
               <li>리뷰 내용은 운영자의 개인적인 사용 경험을 바탕으로 작성됩니다.</li>
               <li>제품 구매 전 쿠팡 상품 페이지에서 최신 정보를 반드시 확인하시기 바랍니다.</li>
@@ -99,14 +94,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제4조의2 (AI 생성 콘텐츠 고지)
             </h2>
             <p>
               사이트의 일부 콘텐츠(리뷰, 가이드, 상품 설명 등)는 AI(인공지능) 기술을 활용하여
               작성될 수 있습니다.
             </p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>AI 생성 콘텐츠는 최대한 정확한 정보를 담도록 검수하지만, 일부 내용이
                 부정확하거나 최신 정보를 반영하지 못할 수 있습니다.</li>
               <li>의료, 법률, 재무 등 전문 분야와 관련된 정보는 반드시 전문가의 조언을
@@ -117,14 +112,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제5조 (쿠팡 파트너스 제휴 링크)
             </h2>
             <p>
               이 사이트는 쿠팡 파트너스 프로그램에 참여하고 있으며, 제휴 링크를 통한
               구매 시 운영자에게 수수료가 지급됩니다.
             </p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>제휴 링크 이용 시 구매자에게 추가 비용이 발생하지 않습니다.</li>
               <li>수수료는 콘텐츠의 객관성에 영향을 주지 않습니다.</li>
               <li>제휴 링크임을 명시한 경우 이를 인지하고 이용하시기 바랍니다.</li>
@@ -133,7 +128,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제6조 (지식재산권)
             </h2>
             <p>
@@ -146,11 +141,11 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제7조 (면책 조항)
             </h2>
             <p>사이트는 다음 사항에 대해 책임을 지지 않습니다.</p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>이용자가 사이트 정보를 기반으로 한 구매 결정으로 인한 손해</li>
               <li>제3자 사이트(쿠팡 등)에서 발생한 결제·배송·환불 관련 문제</li>
               <li>서비스 이용 중 발생한 기술적 장애 또는 데이터 손실</li>
@@ -159,7 +154,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제8조 (외부 링크)
             </h2>
             <p>
@@ -170,7 +165,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제9조 (약관의 변경)
             </h2>
             <p>
@@ -181,7 +176,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제10조 (준거법 및 관할)
             </h2>
             <p>
@@ -191,11 +186,11 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제11조의1 (금지 행위)
             </h2>
             <p>이용자는 사이트를 이용함에 있어 다음 행위를 해서는 안 됩니다.</p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>사이트 콘텐츠의 무단 스크래핑, 크롤링, 대량 복제</li>
               <li>사이트 운영을 방해하는 악성 코드 배포 또는 해킹 시도</li>
               <li>다른 이용자 또는 제3자를 사칭하거나 허위 정보를 유포하는 행위</li>
@@ -208,13 +203,13 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제11조의2 (광고 콘텐츠 고지)
             </h2>
             <p>
               사이트에는 Google AdSense를 통해 제공되는 광고가 게재될 수 있습니다.
             </p>
-            <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+            <ul className="list-disc space-y-1 pl-5 text-gray-500">
               <li>광고는 Google AdSense 정책에 따라 자동으로 선정·게재되며, 운영자가
                 개별 광고 내용을 선별하지 않습니다.</li>
               <li>광고 내용은 사이트의 추천 또는 보증을 의미하지 않으며, 광고주와의
@@ -226,14 +221,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-base font-semibold text-white border-b border-zinc-800 pb-2">
+            <h2 className="border-b border-gray-200 pb-2 text-base font-semibold text-gray-900">
               제12조 (문의처)
             </h2>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-1 text-zinc-400">
-              <p><span className="text-zinc-300 font-medium">운영자:</span> Thive Lab</p>
+            <div className="rounded-xl border border-gray-200 bg-white px-4 py-3 space-y-1 text-gray-500">
+              <p><span className="font-medium text-gray-700">운영자:</span> Thive Lab</p>
               <p>
-                <span className="text-zinc-300 font-medium">이메일:</span>{" "}
-                <a href="mailto:thive8564@gmail.com" className="text-amber-400 hover:text-amber-300">
+                <span className="font-medium text-gray-700">이메일:</span>{" "}
+                <a href="mailto:thive8564@gmail.com" className="text-amber-500 hover:text-amber-400">
                   thive8564@gmail.com
                 </a>
               </p>
@@ -245,7 +240,7 @@ export default function TermsPage() {
         <div className="mt-12">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-amber-400"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 transition hover:text-amber-500"
           >
             <ArrowLeft className="h-4 w-4" />
             홈으로 돌아가기
