@@ -31,12 +31,15 @@ export function trackAffiliateLinkClick(params: {
   }
 
   // ── DB 로그 저장 (fire-and-forget) ──────────────────────────────
-  if (typeof window !== "undefined" && params.slug) {
+  if (typeof window !== "undefined") {
+    const logKey =
+      params.slug ??
+      `product-${params.productName.toLowerCase().replace(/\s+/g, "-").slice(0, 80)}`;
     fetch("/api/click", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        slug: params.slug,
+        slug: logKey,
         category: params.category ?? null,
         position: params.position ?? null,
       }),

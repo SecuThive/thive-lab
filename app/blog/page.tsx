@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { ArrowUpRight, ShoppingBag, Tag, SlidersHorizontal, Clock, TrendingUp, Flame, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { AdUnit } from "@/components/AdSenseUnit";
 
 type BlogPost = {
   id: number;
@@ -341,6 +342,14 @@ function ReviewListInner() {
                   ))}
                 </div>
               </div>
+
+              {/* 사이드바 광고 (AdSense 승인 후 자동 활성화) */}
+              <AdUnit
+                slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR ?? ""}
+                format="rectangle"
+                responsive
+                className="rounded-2xl overflow-hidden"
+              />
 
               {/* 파트너스 고지 */}
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">

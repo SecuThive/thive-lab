@@ -51,6 +51,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // Google Search Console 소유권 인증 — 서치 콘솔에서 발급받은 코드를 env에 추가
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && {
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    },
+  }),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

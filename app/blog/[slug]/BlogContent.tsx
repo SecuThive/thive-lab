@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ShoppingCart, ExternalLink, ShoppingBag, Star, ChevronDown, Zap } from "lucide-react";
 import { trackAffiliateLinkClick } from "@/lib/analytics";
+import { AdUnit } from "@/components/AdSenseUnit";
 
 type BlogContentProps = {
   content: string;
@@ -192,6 +193,14 @@ export default function BlogContent({
 
       {/* ── 구분선 ────────────────────────────────────────────────── */}
       <hr className="border-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mt-14 mb-10" />
+
+      {/* ── 인아티클 광고 (AdSense 승인 후 자동 활성화) ──────────── */}
+      <AdUnit
+        slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_ARTICLE ?? ""}
+        format="auto"
+        responsive
+        className="my-8 rounded-xl overflow-hidden"
+      />
 
       {/* ── 하단 대형 CTA ─────────────────────────────────────────── */}
       {affiliateUrl && (
